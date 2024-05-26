@@ -4,20 +4,61 @@ import './App.css';
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <div className="grid-container">
+
+        <div className="grid-row grid-item-stretch">
+          
+          <div className="grid-column">
+            <div className="grid-item grid-item-stretch">
+              <label>Add Vendor</label>
+            </div>
+          </div>
+          
+
+        </div>
+
+
+        <div className="grid-row">
+          
+          <div className="grid-column">
+            <div className="grid-item">
+              <label>Name</label>
+            </div>
+          </div>
+          
+          <div className="grid-column">
+            <div className="grid-item">
+              <input type="text" className="grid-item-stretch" />
+            </div>
+          </div>
+
+        </div>
+
+        <div className="grid-row">
+          
+          <div className="grid-column">
+            <div className="grid-item">
+              <label>Address</label>
+            </div>
+          </div>
+          
+          <div className="grid-column">
+            <div className="grid-item">
+              <input type="text" className="grid-item-stretch" />
+            </div>
+          </div>
+
+        </div>
+
+        <div className="grid-row">
+          <div className="grid-column grid-column-right">
+            <div className="grid-item">
+              <button>Save</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
