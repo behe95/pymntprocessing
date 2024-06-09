@@ -3,9 +3,12 @@ package com.pymntprocessing.pymntprocessing.service;
 import com.pymntprocessing.pymntprocessing.model.Vendor;
 import com.pymntprocessing.pymntprocessing.repository.VendorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class VendorServiceImpl implements VendorService{
@@ -17,24 +20,30 @@ public class VendorServiceImpl implements VendorService{
         this.vendorRepository = vendorRepository;
     }
 
-    @Override
-    public Vendor saveVendor(Vendor vendor) {
-        return this.vendorRepository.save(vendor);
-    }
 
     @Override
     public List<Vendor> getAllVendors() {
-        return this.vendorRepository.findAll();
+        return null;
     }
 
     @Override
-    public void deleteVendorById(Integer vendorId) {
-        this.vendorRepository.deleteById(vendorId);
+    public Vendor getVendorById(Long id) {
+        Optional<Vendor> vendor = this.vendorRepository.findById(id);
+        return vendor.orElse(null);
     }
 
     @Override
-    public Vendor findAndUpdateVendor(Vendor vendor) {
+    public Vendor createVendor(Vendor vendor) {
+        return null;
+    }
 
-        return this.saveVendor(vendor);
+    @Override
+    public Vendor updateVendor(Long id, Vendor vendor) {
+        return null;
+    }
+
+    @Override
+    public void deleteVendor(Long id) {
+
     }
 }
