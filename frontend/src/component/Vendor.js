@@ -3,12 +3,14 @@ import {useCallback, useEffect, useState} from 'react';
 import VendorItem from './VendorItem';
 
 import axios from 'axios';
+import CONSTANTS from '../const/CONSTANTS';
 
 let id = 0;
 
 const client = axios.create({
   baseURL: "http://127.0.0.1:8080/"
 })
+
 
 function Vendor() {
   const [vendors, setVendors] = useState([]);
@@ -18,6 +20,49 @@ function Vendor() {
   const [vendorId, setVendorId] = useState("");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+
+  /**
+   * Function to track input change
+   */
+  const onChangeHandler = (e, inputType) => {
+    switch (inputType) {
+        case CONSTANTS.VENDOR_INPUT_FIELD_TYPE.vendorNameInput:
+            setVendorName(e.target.value);            
+            break;
+        case CONSTANTS.VENDOR_INPUT_FIELD_TYPE.vendorAddresInput:
+            setVendorAddress(e.target.value);            
+            break;
+        case CONSTANTS.VENDOR_INPUT_FIELD_TYPE.vendorIdInput:
+            setVendorId(e.target.value);            
+            break;    
+        default:
+            break;
+    }
+  }
+
+  /**
+   * Function to update data
+   */
+  function updateVendor(updatedVendor) {
+    setLoading(true);
+    // send to the backend
+    client.post("/vendor/update", updatedVendor)
+    .then(response => {
+      setLoading(false);
+
+      if(response.status == 200) {
+          const {data: vendor, message} = response.data;
+          setMessage(message);           
+
+          const idx = vendors.findIndex(vendor => vendor.id === updatedVendor.id);
+          vendors[idx] = updatedVendor;
+      }
+    })
+    .catch(err => {
+      setLoading(false);
+      console.log(err);
+    });
+  }
 
   /**
    * Function to save data
@@ -53,7 +98,6 @@ function Vendor() {
 
             setVendors(vendors => [...vendors, vendor])
         }
-        console.log(response);
       })
       .catch(err => {
         setLoading(false);
@@ -173,7 +217,7 @@ function Vendor() {
             
             <div className="grid-column">
               <div className="grid-item">
-                <input type="text" className="grid-item-stretch" value={vendorName} onChange={e => setVendorName(e.target.value)}/>
+                <input type="text" className="grid-item-stretch" value={vendorName} onChange={e => onChangeHandler(e, CONSTANTS.VENDOR_INPUT_FIELD_TYPE.vendorNameInput)}/>
               </div>
             </div>
 
@@ -189,7 +233,7 @@ function Vendor() {
             
             <div className="grid-column">
               <div className="grid-item">
-                <input type="text" className="grid-item-stretch" value={vendorAddress} onChange={e => setVendorAddress(e.target.value)} />
+                <input type="text" className="grid-item-stretch" value={vendorAddress} onChange={e =>  onChangeHandler(e, CONSTANTS.VENDOR_INPUT_FIELD_TYPE.vendorAddresInput)} />
               </div>
             </div>
 
@@ -205,7 +249,7 @@ function Vendor() {
             
             <div className="grid-column">
               <div className="grid-item">
-                <input type="text" className="grid-item-stretch" value={vendorId} onChange={e => setVendorId(e.target.value)} />
+                <input type="text" className="grid-item-stretch" value={vendorId} onChange={e =>  onChangeHandler(e, CONSTANTS.VENDOR_INPUT_FIELD_TYPE.vendorIdInput)} />
               </div>
             </div>
 
@@ -237,7 +281,8 @@ function Vendor() {
                   <VendorItem 
                     key={vendor.id} 
                     vendor={vendor} 
-                    onDeleteClick={onDeleteClick} />
+                    onDeleteClick={onDeleteClick}
+                    updateVendor={updateVendor} />
                 ))
               }
             </tbody>

@@ -9,4 +9,7 @@ public interface VendorService {
     public List<Vendor> getAllVendors();
 
     public void deleteVendorById(Integer vendorId);
+
+
+    public Vendor findAndUpdateVendor(Vendor vendor);
 }

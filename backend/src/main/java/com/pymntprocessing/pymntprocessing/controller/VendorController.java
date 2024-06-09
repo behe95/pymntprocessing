@@ -49,4 +49,17 @@ public class VendorController {
 
         return "Vendor has been deleted!";
     }
+
+    @PostMapping("/update")
+    @ResponseBody
+    public ResponseMessage<Vendor> update(@RequestBody Vendor vendor) {
+        Vendor savedVendor = this.vendorService.saveVendor(vendor);
+        ResponseMessage<Vendor> responseMessage = new ResponseMessage<>();
+
+        if (Objects.nonNull(savedVendor)) {
+            responseMessage.setData(savedVendor);
+            responseMessage.setMessage(vendor.getName() + " updated in the system!");
+        }
+        return responseMessage;
+    }
 }
