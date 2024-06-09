@@ -29,7 +29,8 @@ public class VendorController {
         ResponseMessage<Vendor> responseMessage = new ResponseMessage<>();
 
         if (Objects.nonNull(savedVendor)) {
-            responseMessage = new ResponseMessage<>(savedVendor, vendor.getName() + " added to the system!");
+            responseMessage.setData(savedVendor);
+            responseMessage.setMessage(vendor.getName() + " added to the system!");
         }
         return responseMessage;
     }
@@ -37,5 +38,15 @@ public class VendorController {
     @GetMapping("/get")
     public List<Vendor> getAll() {
         return this.vendorService.getAllVendors();
+    }
+
+
+    @DeleteMapping("/delete/{vendorId}")
+    @ResponseBody
+    public String deleteVendorById(@PathVariable Integer vendorId) {
+
+        this.vendorService.deleteVendorById(vendorId);
+
+        return "Vendor has been deleted!";
     }
 }

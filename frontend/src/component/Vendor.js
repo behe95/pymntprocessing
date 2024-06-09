@@ -17,6 +17,7 @@ function Vendor() {
   const [vendorAddress, setVendorAddress] = useState("");
   const [vendorId, setVendorId] = useState("");
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
 
   /**
    * Function to save data
@@ -33,8 +34,6 @@ function Vendor() {
       vendorAddress.length > 0
     ) {
       setLoading(true);
-
-      setVendors(vendors => [...vendors, vendor])
       // Reset data
       setVendorName("");
       setVendorAddress("");
@@ -47,6 +46,13 @@ function Vendor() {
       })
       .then(response => {
         setLoading(false);
+
+        if(response.status == 200) {
+            const {data: vendor, message} = response.data;
+            setMessage(message);           
+
+            setVendors(vendors => [...vendors, vendor])
+        }
         console.log(response);
       })
       .catch(err => {
@@ -64,13 +70,22 @@ function Vendor() {
    * Function to delete data
    */
   function onDeleteClick(id) {
+    setLoading(true);
 
     // delete request to backend
-    client.delete("")
+    client.delete("/vendor/delete/" + id)
+    .then(response => {
+        setLoading(false);
+        setMessage(response.data);
+    })
+    .catch(err => {
+        setLoading(false);
+        setMessage(err.message);
+    })
 
 
     const idx = vendors.findIndex(vendor => vendor.id === id);
-    vendors.splice(idx, idx+1);
+    vendors.splice(idx, 1);
     setVendors(prev => [...prev])
   }
 
@@ -110,12 +125,27 @@ function Vendor() {
   },[])
 
 
+  useEffect(() => {
+    if(!loading) {
+        setTimeout(() => {
+            setMessage("");
+        }, 2000);
+    }
+  }, [loading])
+
+
   return (
     <div className="App">
       {
         loading &&
         <div>
          <p>Loading</p>
+        </div>
+      }
+      {
+        !loading && 
+        <div>
+            <p>{message}</p>
         </div>
       }
       <div className='page stretch-vertically'>
@@ -197,6 +227,7 @@ function Vendor() {
               <tr>
                 <th>Vendor Name</th>
                 <th>Vendor Address</th>
+                <th>Vendor ID</th>
                 <th></th>          
               </tr>
             </thead>

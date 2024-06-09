@@ -26,4 +26,9 @@ public class VendorServiceImpl implements VendorService{
     public List<Vendor> getAllVendors() {
         return this.vendorRepository.findAll();
     }
+
+    @Override
+    public void deleteVendorById(Integer vendorId) {
+        this.vendorRepository.deleteById(vendorId);
+    }
 }
