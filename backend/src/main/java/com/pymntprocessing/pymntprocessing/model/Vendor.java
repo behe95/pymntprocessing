@@ -44,4 +44,5 @@ public class Vendor {
     public void setVendorId(String vendorId) {
         this.vendorId = vendorId;
     }
+    
 }

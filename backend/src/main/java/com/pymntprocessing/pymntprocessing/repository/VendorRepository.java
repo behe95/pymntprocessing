@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface VendorRepository extends JpaRepository<Vendor, Integer> {
     Optional<Vendor> findById(Long id);
+    void deleteById(Long id);
 }

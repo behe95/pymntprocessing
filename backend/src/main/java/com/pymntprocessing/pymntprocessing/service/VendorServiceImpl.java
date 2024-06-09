@@ -23,7 +23,7 @@ public class VendorServiceImpl implements VendorService{
 
     @Override
     public List<Vendor> getAllVendors() {
-        return null;
+        return this.vendorRepository.findAll();
     }
 
     @Override
@@ -34,16 +34,20 @@ public class VendorServiceImpl implements VendorService{
 
     @Override
     public Vendor createVendor(Vendor vendor) {
-        return null;
+        return this.vendorRepository.save(vendor);
     }
 
     @Override
     public Vendor updateVendor(Long id, Vendor vendor) {
+        Optional<Vendor> existingVednor = this.vendorRepository.findById(id);
+        if (existingVednor.isPresent()) {
+            return this.vendorRepository.save(vendor);
+        }
         return null;
     }
 
     @Override
     public void deleteVendor(Long id) {
-
+        this.vendorRepository.deleteById(id);
     }
 }
