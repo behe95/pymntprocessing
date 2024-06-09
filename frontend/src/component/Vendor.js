@@ -1,20 +1,20 @@
 import '../App.css';
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useContext, useEffect, useState} from 'react';
 import VendorItem from './VendorItem';
 
 import axios from 'axios';
 import CONSTANTS from '../const/CONSTANTS';
+import AppContext from '../const/AppContext';
 
 let id = 0;
 
-const client = axios.create({
-  baseURL: "http://127.0.0.1:8080/"
-})
+
 
 
 function Vendor() {
-  const [vendors, setVendors] = useState([]);
 
+  const ctx = useContext(AppContext);
+  const [vendors, setVendors] = useState([]);
   const [vendorName, setVendorName] = useState("");
   const [vendorAddress, setVendorAddress] = useState("");
   const [vendorId, setVendorId] = useState("");
@@ -46,7 +46,7 @@ function Vendor() {
   function updateVendor(updatedVendor) {
     setLoading(true);
     // send to the backend
-    client.post("/vendor/update", updatedVendor)
+    ctx.AXIOS_CLIENT.post("/vendor/update", updatedVendor)
     .then(response => {
       setLoading(false);
 
@@ -84,7 +84,7 @@ function Vendor() {
       setVendorAddress("");
 
       // send to the backend
-      client.post("/vendor/add", {
+      ctx.AXIOS_CLIENT.post("/vendor/add", {
         name: vendor.name
         ,address: vendor.address
         ,vendorId: vendor.vendorId
@@ -117,7 +117,7 @@ function Vendor() {
     setLoading(true);
 
     // delete request to backend
-    client.delete("/vendor/delete/" + id)
+    ctx.AXIOS_CLIENT.delete("/vendor/delete/" + id)
     .then(response => {
         setLoading(false);
         setMessage(response.data);
@@ -147,7 +147,7 @@ function Vendor() {
     if(loading) {
 
       // get vendors
-      client.get("/vendor/get").then(response => {
+      ctx.AXIOS_CLIENT.get("/vendor/get").then(response => {
         const {data} = response;  
         setVendors(prev => [...prev, ...data]);
         setLoading(false);
