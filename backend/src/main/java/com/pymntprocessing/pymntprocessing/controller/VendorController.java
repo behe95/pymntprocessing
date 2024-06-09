@@ -9,6 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/vendor")
+@CrossOrigin(origins = "http://localhost:3000")
 public class VendorController {
 
     private final VendorService vendorService;
