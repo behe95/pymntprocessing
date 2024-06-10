@@ -52,4 +52,19 @@ public class PaymentTransactionController {
                 .body(new ResponseMessage<List<PaymentTransaction>>(paymentTransactions, true, ""));
 
     }
+
+    @GetMapping("/vendor/{vendorId}")
+    public ResponseEntity<ResponseMessage<List<PaymentTransaction>>> getAllPaymentTransactionByVendorId(@PathVariable("vendorId") Long id) {
+        List<PaymentTransaction> paymentTransactions = this.paymentTransactionService.getAllPaymentTransactionByVendorId(id);
+
+        if (paymentTransactions.isEmpty()) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(new ResponseMessage<List<PaymentTransaction>>(paymentTransactions, false, "Vendor doesn't have any payment transaction!"));
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ResponseMessage<List<PaymentTransaction>>(paymentTransactions, true, ""));
+    }
 }

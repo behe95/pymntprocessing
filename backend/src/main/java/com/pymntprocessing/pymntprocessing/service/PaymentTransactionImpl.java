@@ -28,4 +28,9 @@ public class PaymentTransactionImpl implements PaymentTransactionService{
     public List<PaymentTransaction> getAllPaymentTransaction() {
         return this.paymentTransactionRepository.findAll();
     }
+
+    @Override
+    public List<PaymentTransaction> getAllPaymentTransactionByVendorId(Long id) {
+        return this.paymentTransactionRepository.findAllByVendorId(id);
+    }
 }

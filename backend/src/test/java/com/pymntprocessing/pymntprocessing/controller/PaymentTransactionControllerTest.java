@@ -141,4 +141,46 @@ class PaymentTransactionControllerTest {
         verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(11L);
 
     }
+
+    @Test
+    void getAllPaymentTransactionByVendorIdWhenExist() {
+        // given
+        given(this.paymentTransactionService.getAllPaymentTransactionByVendorId(1L)).willReturn(List.of(paymentTransaction1, paymentTransaction2));
+
+        // when
+        ResponseEntity<ResponseMessage<List<PaymentTransaction>>> responseEntity = this.paymentTransactionController.getAllPaymentTransactionByVendorId(1L);
+
+        // then
+        ResponseMessage<List<PaymentTransaction>> responseMessage = (ResponseMessage<List<PaymentTransaction>>) responseEntity.getBody();
+        assert responseMessage != null;
+        boolean isSuccess = responseMessage.isSuccess();
+        List<PaymentTransaction> responsePaymentTransactions = responseMessage.getData();
+
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertTrue(isSuccess);
+        assertEquals(2, responsePaymentTransactions.size());
+        verify(this.paymentTransactionService, times(1)).getAllPaymentTransactionByVendorId(1L);
+    }
+
+
+
+    @Test
+    void getAllPaymentTransactionByVendorIdWhenNotExist() {
+        // given
+        given(this.paymentTransactionService.getAllPaymentTransactionByVendorId(1L)).willReturn(List.of());
+
+        // when
+        ResponseEntity<ResponseMessage<List<PaymentTransaction>>> responseEntity = this.paymentTransactionController.getAllPaymentTransactionByVendorId(1L);
+
+        // then
+        ResponseMessage<List<PaymentTransaction>> responseMessage = (ResponseMessage<List<PaymentTransaction>>) responseEntity.getBody();
+        assert responseMessage != null;
+        boolean isSuccess = responseMessage.isSuccess();
+        List<PaymentTransaction> responsePaymentTransactions = responseMessage.getData();
+
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+        assertFalse(isSuccess);
+        assertEquals(0, responsePaymentTransactions.size());
+        verify(this.paymentTransactionService, times(1)).getAllPaymentTransactionByVendorId(1L);
+    }
 }
