@@ -1,24 +1,30 @@
 package com.pymntprocessing.pymntprocessing.controller;
 
-import com.pymntprocessing.pymntprocessing.model.PaymentTransaction;
-import com.pymntprocessing.pymntprocessing.model.ResponseMessage;
+import com.pymntprocessing.pymntprocessing.constant.db.TransactionStatusValue;
+import com.pymntprocessing.pymntprocessing.constant.db.TransactionTypeValue;
+import com.pymntprocessing.pymntprocessing.model.*;
 import com.pymntprocessing.pymntprocessing.service.PaymentTransactionService;
+import com.pymntprocessing.pymntprocessing.service.VendorService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/paymenttransaction")
 @CrossOrigin(origins = "http://localhost:3000")
 public class PaymentTransactionController {
     private final PaymentTransactionService paymentTransactionService;
+    private final VendorService vendorService;
 
     @Autowired
-    public PaymentTransactionController(PaymentTransactionService paymentTransactionService) {
+    public PaymentTransactionController(PaymentTransactionService paymentTransactionService, VendorService vendorService) {
         this.paymentTransactionService = paymentTransactionService;
+        this.vendorService = vendorService;
     }
 
     @GetMapping("/{id}")
@@ -66,5 +72,97 @@ public class PaymentTransactionController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new ResponseMessage<List<PaymentTransaction>>(paymentTransactions, true, ""));
+    }
+
+    @PostMapping
+    public ResponseEntity<ResponseMessage<PaymentTransaction>> createPaymentTransaction(@RequestBody PaymentTransaction paymentTransaction) {
+        Vendor vendor = paymentTransaction.getVendor();
+        TransactionStatus transactionStatus = paymentTransaction.getTransactionStatus();
+        TransactionType transactionType = paymentTransaction.getTransactionType();
+
+        String errorMessage = "";
+        boolean invalidRequestBody = false;
+
+        /**
+         * validate data
+         */
+        if (vendor == null || vendor.getId() == null) {
+            invalidRequestBody = true;
+            errorMessage = "Vendor information not provided!";
+        } else if (transactionStatus == null || transactionStatus.getId() == null) {
+            invalidRequestBody = true;
+            errorMessage = "Transaction status not provided!";
+        } else if (transactionType == null || transactionType.getId() == null) {
+            invalidRequestBody = true;
+            errorMessage = "Transaction type not provided!";
+        }
+
+        if (invalidRequestBody) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseMessage<>(null, false, errorMessage));
+        }
+
+        /**
+         * check if it's a valid vendor
+         */
+
+        Vendor existingVendor = this.vendorService.getVendorById(vendor.getId());
+
+        if (existingVendor == null) {
+            invalidRequestBody = true;
+            errorMessage = "Invalid vendor provided!";
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseMessage<>(null, false, errorMessage));
+        }
+
+        /**
+         * check if it's a valid transaction status
+         */
+        TransactionStatus existingTransactionStatus = this.paymentTransactionService.getTransactionStatusById(transactionStatus.getId());
+        if (existingTransactionStatus == null || !Objects.equals(existingTransactionStatus.getName(), TransactionStatusValue.OPEN.toString())) {
+            invalidRequestBody = true;
+            errorMessage = "Invalid transaction status provided!";
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseMessage<>(null, false, errorMessage));
+        }
+
+        /**
+         * check if it's a valid transaction type
+         */
+        TransactionType existingTransactionType = this.paymentTransactionService.getTransactionTypeById(transactionType.getId());
+        if (existingTransactionType == null
+                || (!Objects.equals(existingTransactionType.getName(), TransactionTypeValue.DEBIT.toString())
+                && !Objects.equals(existingTransactionType.getName(), TransactionTypeValue.CREDIT.toString()))) {
+            invalidRequestBody = true;
+            errorMessage = "Invalid transaction type provided!";
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseMessage<>(null, false, errorMessage));
+        }
+
+        try {
+            PaymentTransaction newPaymentTransaction = this.paymentTransactionService.createPaymentTransaction(paymentTransaction);
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(new ResponseMessage<>(newPaymentTransaction, true, "Payment transaction created!"));
+        } catch (DataIntegrityViolationException e) {
+            errorMessage = "ERROR: Duplicate entry!";
+            if (e.getRootCause() != null) {
+                errorMessage = e.getRootCause().getMessage();
+            }
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseMessage<>(null, false, errorMessage));
+        } catch (Exception ex) {
+            errorMessage = "ERROR: Internal Server Error! " + ex.getMessage();
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseMessage<>(null, false, errorMessage));
+        }
+
     }
 }

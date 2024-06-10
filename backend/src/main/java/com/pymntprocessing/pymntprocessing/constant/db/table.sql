@@ -26,7 +26,7 @@ CREATE TABLE TransactionStatus (
 
 INSERT INTO TransactionStatus(name, code)
 VALUES
-    ('Open', 1), ('Committed', 2), ('Batched', 3), ('Listed', 4), ('Posted', 5), ('Paid', 6);
+    ('Open', 1), ('Committed', 2), ('Listed', 3), ('Batched', 4), ('Posted', 5), ('Paid', 6);
 
 drop table TransactionType;
 CREATE TABLE TransactionType (

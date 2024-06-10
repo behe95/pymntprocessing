@@ -1,7 +1,11 @@
 package com.pymntprocessing.pymntprocessing.service;
 
 import com.pymntprocessing.pymntprocessing.model.PaymentTransaction;
+import com.pymntprocessing.pymntprocessing.model.TransactionStatus;
+import com.pymntprocessing.pymntprocessing.model.TransactionType;
 import com.pymntprocessing.pymntprocessing.repository.PaymentTransactionRepository;
+import com.pymntprocessing.pymntprocessing.repository.TransactionStatusRepository;
+import com.pymntprocessing.pymntprocessing.repository.TransactionTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,10 +16,14 @@ import java.util.Optional;
 public class PaymentTransactionImpl implements PaymentTransactionService{
 
     private final PaymentTransactionRepository paymentTransactionRepository;
+    private final TransactionStatusRepository transactionStatusRepository;
+    private final TransactionTypeRepository transactionTypeRepository;
 
     @Autowired
-    public PaymentTransactionImpl(PaymentTransactionRepository paymentTransactionRepository) {
+    public PaymentTransactionImpl(PaymentTransactionRepository paymentTransactionRepository, TransactionStatusRepository transactionStatusRepository, TransactionTypeRepository transactionTypeRepository) {
         this.paymentTransactionRepository = paymentTransactionRepository;
+        this.transactionStatusRepository = transactionStatusRepository;
+        this.transactionTypeRepository = transactionTypeRepository;
     }
 
     @Override
@@ -32,5 +40,22 @@ public class PaymentTransactionImpl implements PaymentTransactionService{
     @Override
     public List<PaymentTransaction> getAllPaymentTransactionByVendorId(Long id) {
         return this.paymentTransactionRepository.findAllByVendorId(id);
+    }
+
+    @Override
+    public PaymentTransaction createPaymentTransaction(PaymentTransaction paymentTransaction) {
+        return this.paymentTransactionRepository.save(paymentTransaction);
+    }
+
+    @Override
+    public TransactionStatus getTransactionStatusById(Long id) {
+        Optional<TransactionStatus> transactionStatus = this.transactionStatusRepository.findById(id);
+        return transactionStatus.orElse(null);
+    }
+
+    @Override
+    public TransactionType getTransactionTypeById(Long id) {
+        Optional<TransactionType> transactionType = this.transactionTypeRepository.findById(id);
+        return transactionType.orElse(null);
     }
 }
