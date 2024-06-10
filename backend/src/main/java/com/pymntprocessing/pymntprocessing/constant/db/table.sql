@@ -7,8 +7,10 @@ CREATE TABLE Vendor (
 
 CREATE TABLE PaymentTransaction (
     paymentTransactionPk INT PRIMARY KEY AUTO_INCREMENT,
+    fkVendor INT,
     fkTransactionType INT,          -- debit, credit
     fkGLAccount INT,
+    fkInvoice INT,
     transactionNumber INT UNIQUE,
     transactionDescription VARCHAR(100),
     transactionAmount DECIMAL(15,2),
@@ -20,7 +22,6 @@ CREATE TABLE PaymentTransaction (
 
 
 
-drop table TransactionType;
 CREATE TABLE TransactionType (
     transactionTypePk INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100),
@@ -28,17 +29,12 @@ CREATE TABLE TransactionType (
     code INT UNIQUE
 );
 
-INSERT INTO TransactionType(name, multiplier, code)
-VALUES
-    ('Credit', -1, 1), ('Debit', 1, 2);
-
 
 CREATE TABLE Invoice (
     invoicePk INT PRIMARY KEY AUTO_INCREMENT,
     fkVendor INT,
     fkCheck INT,
     fkInvoiceStatus INT,        -- batched, listed, posted, paid
-    fkPaymentTransaction INT,
     invoiceNumber INT UNIQUE,
     invoiceDescription VARCHAR(100),
     invoiceAmount DECIMAL(15,2),
@@ -54,7 +50,3 @@ CREATE TABLE InvoiceStatus (
     name VARCHAR(100),
     code INT UNIQUE
 );
-
-INSERT INTO InvoiceStatus(name, code)
-VALUES
-    ('Open', 1), ('Committed', 2), ('Batched', 3), ('Listed', 4), ('Posted', 5), ('Paid', 6);
