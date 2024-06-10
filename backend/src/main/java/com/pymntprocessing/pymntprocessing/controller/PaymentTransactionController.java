@@ -1,6 +1,6 @@
 package com.pymntprocessing.pymntprocessing.controller;
 
-import com.pymntprocessing.pymntprocessing.constant.db.TransactionStatusValue;
+import com.pymntprocessing.pymntprocessing.constant.db.InvoiceStatusValue;
 import com.pymntprocessing.pymntprocessing.constant.db.TransactionTypeValue;
 import com.pymntprocessing.pymntprocessing.model.*;
 import com.pymntprocessing.pymntprocessing.service.PaymentTransactionService;
@@ -77,7 +77,7 @@ public class PaymentTransactionController {
     @PostMapping
     public ResponseEntity<ResponseMessage<PaymentTransaction>> createPaymentTransaction(@RequestBody PaymentTransaction paymentTransaction) {
         Vendor vendor = paymentTransaction.getVendor();
-        TransactionStatus transactionStatus = paymentTransaction.getTransactionStatus();
+//        TransactionStatus transactionStatus = paymentTransaction.getTransactionStatus();
         TransactionType transactionType = paymentTransaction.getTransactionType();
 
         String errorMessage = "";
@@ -89,10 +89,12 @@ public class PaymentTransactionController {
         if (vendor == null || vendor.getId() == null) {
             invalidRequestBody = true;
             errorMessage = "Vendor information not provided!";
-        } else if (transactionStatus == null || transactionStatus.getId() == null) {
-            invalidRequestBody = true;
-            errorMessage = "Transaction status not provided!";
-        } else if (transactionType == null || transactionType.getId() == null) {
+        }
+//        else if (transactionStatus == null || transactionStatus.getId() == null) {
+//            invalidRequestBody = true;
+//            errorMessage = "Transaction status not provided!";
+//        }
+        else if (transactionType == null || transactionType.getId() == null) {
             invalidRequestBody = true;
             errorMessage = "Transaction type not provided!";
         }
@@ -117,17 +119,17 @@ public class PaymentTransactionController {
                     .body(new ResponseMessage<>(null, false, errorMessage));
         }
 
-        /**
-         * check if it's a valid transaction status
-         */
-        TransactionStatus existingTransactionStatus = this.paymentTransactionService.getTransactionStatusById(transactionStatus.getId());
-        if (existingTransactionStatus == null || !Objects.equals(transactionStatus.getName(), TransactionStatusValue.OPEN.toString())) {
-            invalidRequestBody = true;
-            errorMessage = "Invalid transaction status provided!";
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
-        }
+//        /**
+//         * check if it's a valid transaction status
+//         */
+//        TransactionStatus existingTransactionStatus = this.paymentTransactionService.getTransactionStatusById(transactionStatus.getId());
+//        if (existingTransactionStatus == null || !Objects.equals(transactionStatus.getName(), InvoiceStatusValue.OPEN.toString())) {
+//            invalidRequestBody = true;
+//            errorMessage = "Invalid transaction status provided!";
+//            return ResponseEntity
+//                    .status(HttpStatus.BAD_REQUEST)
+//                    .body(new ResponseMessage<>(null, false, errorMessage));
+//        }
 
         /**
          * check if it's a valid transaction type
@@ -170,7 +172,7 @@ public class PaymentTransactionController {
     public ResponseEntity<ResponseMessage<PaymentTransaction>> updatePaymentTransaction(@PathVariable Long id, @RequestBody PaymentTransaction paymentTransaction) {
 
         Vendor vendor = paymentTransaction.getVendor();
-        TransactionStatus transactionStatus = paymentTransaction.getTransactionStatus();
+//        TransactionStatus transactionStatus = paymentTransaction.getTransactionStatus();
         TransactionType transactionType = paymentTransaction.getTransactionType();
 
         String errorMessage = "";
@@ -182,10 +184,12 @@ public class PaymentTransactionController {
         if (vendor == null || vendor.getId() == null) {
             invalidRequestBody = true;
             errorMessage = "Vendor information not provided!";
-        } else if (transactionStatus == null || transactionStatus.getId() == null) {
-            invalidRequestBody = true;
-            errorMessage = "Transaction status not provided!";
-        } else if (transactionType == null || transactionType.getId() == null) {
+        }
+//        else if (transactionStatus == null || transactionStatus.getId() == null) {
+//            invalidRequestBody = true;
+//            errorMessage = "Transaction status not provided!";
+//        }
+        else if (transactionType == null || transactionType.getId() == null) {
             invalidRequestBody = true;
             errorMessage = "Transaction type not provided!";
         }
@@ -210,20 +214,20 @@ public class PaymentTransactionController {
                     .body(new ResponseMessage<>(null, false, errorMessage));
         }
 
-        /**
-         * Check if valid transaction status and if transaction status is still open or committed
-         */
-        TransactionStatus existingTransactionStatus = this.paymentTransactionService.getTransactionStatusById(transactionStatus.getId());
-        if (existingTransactionStatus == null || (
-                !Objects.equals(transactionStatus.getName(), TransactionStatusValue.OPEN.toString())
-                        && !Objects.equals(transactionStatus.getName(), TransactionStatusValue.COMMITTED.toString())
-        )) {
-            invalidRequestBody = true;
-            errorMessage = "Unable to update transaction. Transaction status: " + transactionStatus.getName();
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
-        }
+//        /**
+//         * Check if valid transaction status and if transaction status is still open or committed
+//         */
+//        TransactionStatus existingTransactionStatus = this.paymentTransactionService.getTransactionStatusById(transactionStatus.getId());
+//        if (existingTransactionStatus == null || (
+//                !Objects.equals(transactionStatus.getName(), InvoiceStatusValue.OPEN.toString())
+//                        && !Objects.equals(transactionStatus.getName(), InvoiceStatusValue.COMMITTED.toString())
+//        )) {
+//            invalidRequestBody = true;
+//            errorMessage = "Unable to update transaction. Transaction status: " + transactionStatus.getName();
+//            return ResponseEntity
+//                    .status(HttpStatus.BAD_REQUEST)
+//                    .body(new ResponseMessage<>(null, false, errorMessage));
+//        }
 
         /**
          * check if it's a valid transaction type
@@ -273,24 +277,24 @@ public class PaymentTransactionController {
                     .body(new ResponseMessage<>(null, false, "Invalid id provided"));
         }
 
-        TransactionStatus transactionStatus = paymentTransaction.getTransactionStatus();
-        /**
-         * Check if valid transaction status and if transaction status is not paid
-         */
-        TransactionStatus existingTransactionStatus = this.paymentTransactionService.getTransactionStatusById(transactionStatus.getId());
-        if (existingTransactionStatus == null || (
-                Objects.equals(transactionStatus.getName(), TransactionStatusValue.PAID.toString())
-        )) {
-            String errorMessage = "Unable to delete transaction. Transaction status: " + transactionStatus.getName();
-
-            if (existingTransactionStatus == null) {
-                errorMessage = "Invalid transaction status provided!";
-            }
-
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
-        }
+//        TransactionStatus transactionStatus = paymentTransaction.getTransactionStatus();
+//        /**
+//         * Check if valid transaction status and if transaction status is not paid
+//         */
+//        TransactionStatus existingTransactionStatus = this.paymentTransactionService.getTransactionStatusById(transactionStatus.getId());
+//        if (existingTransactionStatus == null || (
+//                Objects.equals(transactionStatus.getName(), InvoiceStatusValue.PAID.toString())
+//        )) {
+//            String errorMessage = "Unable to delete transaction. Transaction status: " + transactionStatus.getName();
+//
+//            if (existingTransactionStatus == null) {
+//                errorMessage = "Invalid transaction status provided!";
+//            }
+//
+//            return ResponseEntity
+//                    .status(HttpStatus.BAD_REQUEST)
+//                    .body(new ResponseMessage<>(null, false, errorMessage));
+//        }
 
         this.paymentTransactionService.deletePaymentTransaction(id);
         return ResponseEntity

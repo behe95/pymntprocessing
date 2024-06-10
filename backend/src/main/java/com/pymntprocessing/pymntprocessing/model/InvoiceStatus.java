@@ -3,21 +3,21 @@ package com.pymntprocessing.pymntprocessing.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "TransactionStatus")
-public class TransactionStatus {
+@Table(name = "InvoiceStatus")
+public class InvoiceStatus {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "transactionStatusPk")
+    @Column(name = "invoiceStatusPk")
     private Long id;
 
     private String name;
 
     private int code;
 
-    public TransactionStatus() {
+    public InvoiceStatus() {
     }
 
-    public TransactionStatus(Long id, String name, int code) {
+    public InvoiceStatus(Long id, String name, int code) {
         this.id = id;
         this.name = name;
         this.code = code;

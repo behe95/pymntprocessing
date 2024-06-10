@@ -14,9 +14,9 @@ public class PaymentTransaction {
     @JoinColumn(name = "fkVendor", referencedColumnName = "vendorPk")
     private Vendor vendor;
 
-    @OneToOne
-    @JoinColumn(name = "fkTransactionStatus", referencedColumnName = "transactionStatusPk")
-    private TransactionStatus transactionStatus;
+//    @OneToOne
+//    @JoinColumn(name = "fkTransactionStatus", referencedColumnName = "transactionStatusPk")
+//    private TransactionStatus transactionStatus;
 
     @OneToOne
     @JoinColumn(name = "fkTransactionType", referencedColumnName = "transactionTypePk")
@@ -45,13 +45,13 @@ public class PaymentTransaction {
     }
 
 
-    public TransactionStatus getTransactionStatus() {
-        return transactionStatus;
-    }
-
-    public void setTransactionStatus(TransactionStatus transactionStatus) {
-        this.transactionStatus = transactionStatus;
-    }
+//    public TransactionStatus getTransactionStatus() {
+//        return transactionStatus;
+//    }
+//
+//    public void setTransactionStatus(TransactionStatus transactionStatus) {
+//        this.transactionStatus = transactionStatus;
+//    }
 
     public TransactionType getTransactionType() {
         return transactionType;

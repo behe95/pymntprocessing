@@ -1,6 +1,6 @@
 package com.pymntprocessing.pymntprocessing.constant.db;
 
-public enum TransactionStatusValue {
+public enum InvoiceStatusValue {
     OPEN("Open"),
     COMMITTED("Committed"),
     LISTED("Listed"),
@@ -10,7 +10,7 @@ public enum TransactionStatusValue {
 
     private final String statusValue;
 
-    TransactionStatusValue(String statusValue) {
+    InvoiceStatusValue(String statusValue) {
         this.statusValue = statusValue;
     }
 

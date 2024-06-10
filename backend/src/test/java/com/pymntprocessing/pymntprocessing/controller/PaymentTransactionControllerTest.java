@@ -34,14 +34,14 @@ class PaymentTransactionControllerTest {
 
     private PaymentTransaction paymentTransaction1;
     private PaymentTransaction paymentTransaction2;
-    TransactionStatus transactionStatus;
+//    TransactionStatus transactionStatus;
     TransactionType transactionType;
 
     Vendor vendor1;
 
     @BeforeEach
     void setUp() {
-        transactionStatus = new TransactionStatus(1L, "Open", 1);
+//        transactionStatus = new TransactionStatus(1L, "Open", 1);
         transactionType = new TransactionType(2L, "Debit", 1, 2);
 
         vendor1 = new Vendor();
@@ -54,7 +54,7 @@ class PaymentTransactionControllerTest {
         paymentTransaction1.setId(1L);
         paymentTransaction1.setVendor(vendor1);
         paymentTransaction1.setTransactionType(transactionType);
-        paymentTransaction1.setTransactionStatus(transactionStatus);
+//        paymentTransaction1.setTransactionStatus(transactionStatus);
         paymentTransaction1.setTransactionNumber(1);
         paymentTransaction1.setTransactionDescription("Payment Transaction Description 1");
         paymentTransaction1.setTransactionAmount(50.50);
@@ -64,7 +64,7 @@ class PaymentTransactionControllerTest {
         paymentTransaction2.setId(2L);
         paymentTransaction2.setVendor(vendor1);
         paymentTransaction2.setTransactionType(transactionType);
-        paymentTransaction2.setTransactionStatus(transactionStatus);
+//        paymentTransaction2.setTransactionStatus(transactionStatus);
         paymentTransaction2.setTransactionNumber(2);
         paymentTransaction2.setTransactionDescription("Payment Transaction Description 2");
         paymentTransaction2.setTransactionAmount(150.00);
@@ -215,36 +215,36 @@ class PaymentTransactionControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
         verify(this.vendorService, times(0)).getVendorById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
+//        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
         verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
         verify(this.paymentTransactionService, times(0)).createPaymentTransaction(any(PaymentTransaction.class));
 
-        /**
-         * Transaction status not provided
-         */
-        newPaymentTransaction.setVendor(vendor1);
-        newPaymentTransaction.setTransactionStatus(null);
-
-        // when
-        responseEntity = this.paymentTransactionController.createPaymentTransaction(newPaymentTransaction);
-
-        // then
-        responseMessage = (ResponseMessage<PaymentTransaction>) responseEntity.getBody();
-        assert responseMessage != null;
-        isSuccess = responseMessage.isSuccess();
-
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(0)).getVendorById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).createPaymentTransaction(any(PaymentTransaction.class));
+//        /**
+//         * Transaction status not provided
+//         */
+//        newPaymentTransaction.setVendor(vendor1);
+////        newPaymentTransaction.setTransactionStatus(null);
+//
+//        // when
+//        responseEntity = this.paymentTransactionController.createPaymentTransaction(newPaymentTransaction);
+//
+//        // then
+//        responseMessage = (ResponseMessage<PaymentTransaction>) responseEntity.getBody();
+//        assert responseMessage != null;
+//        isSuccess = responseMessage.isSuccess();
+//
+//        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+//        assertFalse(isSuccess);
+//        verify(this.vendorService, times(0)).getVendorById(any(Long.class));
+////        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
+//        verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
+//        verify(this.paymentTransactionService, times(0)).createPaymentTransaction(any(PaymentTransaction.class));
 
         /**
          * Transaction type not provided
          */
         newPaymentTransaction.setVendor(vendor1);
-        newPaymentTransaction.setTransactionStatus(transactionStatus);
+//        newPaymentTransaction.setTransactionStatus(transactionStatus);
         newPaymentTransaction.setTransactionType(null);
 
         // when
@@ -258,7 +258,7 @@ class PaymentTransactionControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
         verify(this.vendorService, times(0)).getVendorById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
+//        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
         verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
         verify(this.paymentTransactionService, times(0)).createPaymentTransaction(any(PaymentTransaction.class));
     }
@@ -289,39 +289,39 @@ class PaymentTransactionControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
         verify(this.vendorService, times(1)).getVendorById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
+//        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
         verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
         verify(this.paymentTransactionService, times(0)).createPaymentTransaction(any(PaymentTransaction.class));
 
         reset(vendorService);
-        /**
-         * Invalid Transaction status provided
-         */
-
-        // given
-        given(this.vendorService.getVendorById(newPaymentTransaction.getVendor().getId())).willReturn(newPaymentTransaction.getVendor());
-        given(this.paymentTransactionService.getTransactionStatusById(newPaymentTransaction.getId())).willReturn(null);
-
-        // when
-        responseEntity = this.paymentTransactionController.createPaymentTransaction(newPaymentTransaction);
-
-        // then
-        responseMessage = (ResponseMessage<PaymentTransaction>) responseEntity.getBody();
-        assert responseMessage != null;
-        isSuccess = responseMessage.isSuccess();
-        responsePaymentTransaction = responseMessage.getData();
-
-        assertNull(responsePaymentTransaction);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(1)).getVendorById(any(Long.class));
-        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).createPaymentTransaction(any(PaymentTransaction.class));
-
-
-        reset(vendorService);
-        reset(paymentTransactionService);
+//        /**
+//         * Invalid Transaction status provided
+//         */
+//
+//        // given
+//        given(this.vendorService.getVendorById(newPaymentTransaction.getVendor().getId())).willReturn(newPaymentTransaction.getVendor());
+////        given(this.paymentTransactionService.getTransactionStatusById(newPaymentTransaction.getId())).willReturn(null);
+//
+//        // when
+//        responseEntity = this.paymentTransactionController.createPaymentTransaction(newPaymentTransaction);
+//
+//        // then
+//        responseMessage = (ResponseMessage<PaymentTransaction>) responseEntity.getBody();
+//        assert responseMessage != null;
+//        isSuccess = responseMessage.isSuccess();
+//        responsePaymentTransaction = responseMessage.getData();
+//
+//        assertNull(responsePaymentTransaction);
+//        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+//        assertFalse(isSuccess);
+//        verify(this.vendorService, times(1)).getVendorById(any(Long.class));
+////        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(any(Long.class));
+//        verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
+//        verify(this.paymentTransactionService, times(0)).createPaymentTransaction(any(PaymentTransaction.class));
+//
+//
+//        reset(vendorService);
+//        reset(paymentTransactionService);
 
         /**
          * Invalid Transaction type provided
@@ -329,7 +329,7 @@ class PaymentTransactionControllerTest {
 
         // given
         given(this.vendorService.getVendorById(newPaymentTransaction.getVendor().getId())).willReturn(newPaymentTransaction.getVendor());
-        given(this.paymentTransactionService.getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId())).willReturn(newPaymentTransaction.getTransactionStatus());
+//        given(this.paymentTransactionService.getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId())).willReturn(newPaymentTransaction.getTransactionStatus());
         given(this.paymentTransactionService.getTransactionTypeById(newPaymentTransaction.getTransactionType().getId())).willReturn(null);
 
         // when
@@ -345,7 +345,7 @@ class PaymentTransactionControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
         verify(this.vendorService, times(1)).getVendorById(any(Long.class));
-        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(any(Long.class));
+//        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(any(Long.class));
         verify(this.paymentTransactionService, times(1)).getTransactionTypeById(any(Long.class));
         verify(this.paymentTransactionService, times(0)).createPaymentTransaction(any(PaymentTransaction.class));
     }
@@ -360,7 +360,7 @@ class PaymentTransactionControllerTest {
 
         // given
         given(this.vendorService.getVendorById(newPaymentTransaction.getVendor().getId())).willReturn(newPaymentTransaction.getVendor());
-        given(this.paymentTransactionService.getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId())).willReturn(newPaymentTransaction.getTransactionStatus());
+//        given(this.paymentTransactionService.getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId())).willReturn(newPaymentTransaction.getTransactionStatus());
         given(this.paymentTransactionService.getTransactionTypeById(newPaymentTransaction.getTransactionType().getId())).willReturn(newPaymentTransaction.getTransactionType());
         given(this.paymentTransactionService.createPaymentTransaction(newPaymentTransaction)).willReturn(newPaymentTransaction);
 
@@ -377,7 +377,7 @@ class PaymentTransactionControllerTest {
         assertTrue(isSuccess);
         assertEquals(newPaymentTransaction, createdPaymentTransaction);
         verify(this.vendorService, times(1)).getVendorById(newPaymentTransaction.getVendor().getId());
-        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId());
+//        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId());
         verify(this.paymentTransactionService, times(1)).getTransactionTypeById(newPaymentTransaction.getTransactionType().getId());
         verify(this.paymentTransactionService, times(1)).createPaymentTransaction(newPaymentTransaction);
 
@@ -389,7 +389,7 @@ class PaymentTransactionControllerTest {
 
         // given
         given(this.vendorService.getVendorById(newPaymentTransaction.getVendor().getId())).willReturn(newPaymentTransaction.getVendor());
-        given(this.paymentTransactionService.getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId())).willReturn(newPaymentTransaction.getTransactionStatus());
+//        given(this.paymentTransactionService.getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId())).willReturn(newPaymentTransaction.getTransactionStatus());
         given(this.paymentTransactionService.getTransactionTypeById(newPaymentTransaction.getTransactionType().getId())).willReturn(newPaymentTransaction.getTransactionType());
         given(this.paymentTransactionService.createPaymentTransaction(newPaymentTransaction)).willThrow(new DataIntegrityViolationException(""));
 
@@ -406,7 +406,7 @@ class PaymentTransactionControllerTest {
         assertFalse(isSuccess);
         assertNull(createdPaymentTransaction);
         verify(this.vendorService, times(1)).getVendorById(newPaymentTransaction.getVendor().getId());
-        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId());
+//        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId());
         verify(this.paymentTransactionService, times(1)).getTransactionTypeById(newPaymentTransaction.getTransactionType().getId());
         verify(this.paymentTransactionService, times(1)).createPaymentTransaction(newPaymentTransaction);
 
@@ -419,7 +419,7 @@ class PaymentTransactionControllerTest {
 
         // given
         given(this.vendorService.getVendorById(newPaymentTransaction.getVendor().getId())).willReturn(newPaymentTransaction.getVendor());
-        given(this.paymentTransactionService.getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId())).willReturn(newPaymentTransaction.getTransactionStatus());
+//        given(this.paymentTransactionService.getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId())).willReturn(newPaymentTransaction.getTransactionStatus());
         given(this.paymentTransactionService.getTransactionTypeById(newPaymentTransaction.getTransactionType().getId())).willReturn(newPaymentTransaction.getTransactionType());
         given(this.paymentTransactionService.createPaymentTransaction(newPaymentTransaction)).willThrow(new RuntimeException(""));
 
@@ -436,7 +436,7 @@ class PaymentTransactionControllerTest {
         assertFalse(isSuccess);
         assertNull(createdPaymentTransaction);
         verify(this.vendorService, times(1)).getVendorById(newPaymentTransaction.getVendor().getId());
-        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId());
+//        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId());
         verify(this.paymentTransactionService, times(1)).getTransactionTypeById(newPaymentTransaction.getTransactionType().getId());
         verify(this.paymentTransactionService, times(1)).createPaymentTransaction(newPaymentTransaction);
 
@@ -467,36 +467,36 @@ class PaymentTransactionControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
         verify(this.vendorService, times(0)).getVendorById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
+//        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
         verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
         verify(this.paymentTransactionService, times(0)).updatePaymentTransaction(any(Long.class),any(PaymentTransaction.class));
 
-        /**
-         * Transaction status not provided
-         */
-        updatedPaymentTransaction.setVendor(vendor1);
-        updatedPaymentTransaction.setTransactionStatus(null);
-
-        // when
-        responseEntity = this.paymentTransactionController.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
-
-        // then
-        responseMessage = (ResponseMessage<PaymentTransaction>) responseEntity.getBody();
-        assert responseMessage != null;
-        isSuccess = responseMessage.isSuccess();
-
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(0)).getVendorById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).updatePaymentTransaction(any(Long.class),any(PaymentTransaction.class));
+//        /**
+//         * Transaction status not provided
+//         */
+//        updatedPaymentTransaction.setVendor(vendor1);
+////        updatedPaymentTransaction.setTransactionStatus(null);
+//
+//        // when
+//        responseEntity = this.paymentTransactionController.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
+//
+//        // then
+//        responseMessage = (ResponseMessage<PaymentTransaction>) responseEntity.getBody();
+//        assert responseMessage != null;
+//        isSuccess = responseMessage.isSuccess();
+//
+//        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+//        assertFalse(isSuccess);
+//        verify(this.vendorService, times(0)).getVendorById(any(Long.class));
+////        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
+//        verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
+//        verify(this.paymentTransactionService, times(0)).updatePaymentTransaction(any(Long.class),any(PaymentTransaction.class));
 
         /**
          * Transaction type not provided
          */
         updatedPaymentTransaction.setVendor(vendor1);
-        updatedPaymentTransaction.setTransactionStatus(transactionStatus);
+//        updatedPaymentTransaction.setTransactionStatus(transactionStatus);
         updatedPaymentTransaction.setTransactionType(null);
 
         // when
@@ -510,7 +510,7 @@ class PaymentTransactionControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
         verify(this.vendorService, times(0)).getVendorById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
+//        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
         verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
         verify(this.paymentTransactionService, times(0)).updatePaymentTransaction(any(Long.class), any(PaymentTransaction.class));
     }
@@ -541,39 +541,39 @@ class PaymentTransactionControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
         verify(this.vendorService, times(1)).getVendorById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
+//        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
         verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
         verify(this.paymentTransactionService, times(0)).updatePaymentTransaction(any(Long.class), any(PaymentTransaction.class));
 
         reset(vendorService);
-        /**
-         * Invalid Transaction status provided
-         */
-
-        // given
-        given(this.vendorService.getVendorById(updatedPaymentTransaction.getVendor().getId())).willReturn(updatedPaymentTransaction.getVendor());
-        given(this.paymentTransactionService.getTransactionStatusById(updatedPaymentTransaction.getId())).willReturn(null);
-
-        // when
-        responseEntity = this.paymentTransactionController.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
-
-        // then
-        responseMessage = (ResponseMessage<PaymentTransaction>) responseEntity.getBody();
-        assert responseMessage != null;
-        isSuccess = responseMessage.isSuccess();
-        responsePaymentTransaction = responseMessage.getData();
-
-        assertNull(responsePaymentTransaction);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(1)).getVendorById(any(Long.class));
-        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).updatePaymentTransaction(any(Long.class), any(PaymentTransaction.class));
-
-
-        reset(vendorService);
-        reset(paymentTransactionService);
+//        /**
+//         * Invalid Transaction status provided
+//         */
+//
+//        // given
+//        given(this.vendorService.getVendorById(updatedPaymentTransaction.getVendor().getId())).willReturn(updatedPaymentTransaction.getVendor());
+////        given(this.paymentTransactionService.getTransactionStatusById(updatedPaymentTransaction.getId())).willReturn(null);
+//
+//        // when
+//        responseEntity = this.paymentTransactionController.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
+//
+//        // then
+//        responseMessage = (ResponseMessage<PaymentTransaction>) responseEntity.getBody();
+//        assert responseMessage != null;
+//        isSuccess = responseMessage.isSuccess();
+//        responsePaymentTransaction = responseMessage.getData();
+//
+//        assertNull(responsePaymentTransaction);
+//        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+//        assertFalse(isSuccess);
+//        verify(this.vendorService, times(1)).getVendorById(any(Long.class));
+////        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(any(Long.class));
+//        verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
+//        verify(this.paymentTransactionService, times(0)).updatePaymentTransaction(any(Long.class), any(PaymentTransaction.class));
+//
+//
+//        reset(vendorService);
+//        reset(paymentTransactionService);
 
         /**
          * Invalid Transaction type provided
@@ -581,7 +581,7 @@ class PaymentTransactionControllerTest {
 
         // given
         given(this.vendorService.getVendorById(updatedPaymentTransaction.getVendor().getId())).willReturn(updatedPaymentTransaction.getVendor());
-        given(this.paymentTransactionService.getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId())).willReturn(updatedPaymentTransaction.getTransactionStatus());
+//        given(this.paymentTransactionService.getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId())).willReturn(updatedPaymentTransaction.getTransactionStatus());
         given(this.paymentTransactionService.getTransactionTypeById(updatedPaymentTransaction.getTransactionType().getId())).willReturn(null);
 
         // when
@@ -597,7 +597,7 @@ class PaymentTransactionControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
         verify(this.vendorService, times(1)).getVendorById(any(Long.class));
-        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(any(Long.class));
+//        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(any(Long.class));
         verify(this.paymentTransactionService, times(1)).getTransactionTypeById(any(Long.class));
         verify(this.paymentTransactionService, times(0)).updatePaymentTransaction(any(Long.class), any(PaymentTransaction.class));
     }
@@ -612,7 +612,7 @@ class PaymentTransactionControllerTest {
 
         // given
         given(this.vendorService.getVendorById(updatedPaymentTransaction.getVendor().getId())).willReturn(updatedPaymentTransaction.getVendor());
-        given(this.paymentTransactionService.getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId())).willReturn(updatedPaymentTransaction.getTransactionStatus());
+//        given(this.paymentTransactionService.getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId())).willReturn(updatedPaymentTransaction.getTransactionStatus());
         given(this.paymentTransactionService.getTransactionTypeById(updatedPaymentTransaction.getTransactionType().getId())).willReturn(updatedPaymentTransaction.getTransactionType());
         given(this.paymentTransactionService.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction)).willReturn(updatedPaymentTransaction);
 
@@ -629,7 +629,7 @@ class PaymentTransactionControllerTest {
         assertTrue(isSuccess);
         assertEquals(updatedPaymentTransaction, responseUpdatedPaymentTransaction);
         verify(this.vendorService, times(1)).getVendorById(updatedPaymentTransaction.getVendor().getId());
-        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId());
+//        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId());
         verify(this.paymentTransactionService, times(1)).getTransactionTypeById(updatedPaymentTransaction.getTransactionType().getId());
         verify(this.paymentTransactionService, times(1)).updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
 
@@ -641,7 +641,7 @@ class PaymentTransactionControllerTest {
 
         // given
         given(this.vendorService.getVendorById(updatedPaymentTransaction.getVendor().getId())).willReturn(updatedPaymentTransaction.getVendor());
-        given(this.paymentTransactionService.getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId())).willReturn(updatedPaymentTransaction.getTransactionStatus());
+//        given(this.paymentTransactionService.getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId())).willReturn(updatedPaymentTransaction.getTransactionStatus());
         given(this.paymentTransactionService.getTransactionTypeById(updatedPaymentTransaction.getTransactionType().getId())).willReturn(updatedPaymentTransaction.getTransactionType());
         given(this.paymentTransactionService.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction)).willThrow(new DataIntegrityViolationException(""));
 
@@ -658,7 +658,7 @@ class PaymentTransactionControllerTest {
         assertFalse(isSuccess);
         assertNull(responseUpdatedPaymentTransaction);
         verify(this.vendorService, times(1)).getVendorById(updatedPaymentTransaction.getVendor().getId());
-        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId());
+//        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId());
         verify(this.paymentTransactionService, times(1)).getTransactionTypeById(updatedPaymentTransaction.getTransactionType().getId());
         verify(this.paymentTransactionService, times(1)).updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
 
@@ -671,7 +671,7 @@ class PaymentTransactionControllerTest {
 
         // given
         given(this.vendorService.getVendorById(updatedPaymentTransaction.getVendor().getId())).willReturn(updatedPaymentTransaction.getVendor());
-        given(this.paymentTransactionService.getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId())).willReturn(updatedPaymentTransaction.getTransactionStatus());
+//        given(this.paymentTransactionService.getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId())).willReturn(updatedPaymentTransaction.getTransactionStatus());
         given(this.paymentTransactionService.getTransactionTypeById(updatedPaymentTransaction.getTransactionType().getId())).willReturn(updatedPaymentTransaction.getTransactionType());
         given(this.paymentTransactionService.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction)).willThrow(new RuntimeException(""));
 
@@ -688,7 +688,7 @@ class PaymentTransactionControllerTest {
         assertFalse(isSuccess);
         assertNull(responseUpdatedPaymentTransaction);
         verify(this.vendorService, times(1)).getVendorById(updatedPaymentTransaction.getVendor().getId());
-        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId());
+//        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId());
         verify(this.paymentTransactionService, times(1)).getTransactionTypeById(updatedPaymentTransaction.getTransactionType().getId());
         verify(this.paymentTransactionService, times(1)).updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
 
@@ -698,7 +698,7 @@ class PaymentTransactionControllerTest {
     void deletePaymentTransaction() {
         // given
         given(this.paymentTransactionService.getPaymentTransactionById(paymentTransaction1.getId())).willReturn(paymentTransaction1);
-        given(this.paymentTransactionService.getTransactionStatusById(paymentTransaction1.getTransactionStatus().getId())).willReturn(paymentTransaction1.getTransactionStatus());
+//        given(this.paymentTransactionService.getTransactionStatusById(paymentTransaction1.getTransactionStatus().getId())).willReturn(paymentTransaction1.getTransactionStatus());
 
 
         // when
@@ -711,33 +711,33 @@ class PaymentTransactionControllerTest {
         assertTrue(isSuccess);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(paymentTransaction1.getId());
-        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(paymentTransaction1.getId());
+//        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(paymentTransaction1.getId());
         verify(this.paymentTransactionService, times(1)).deletePaymentTransaction(paymentTransaction1.getId());
     }
 
 
-    @Test
-    void deletePaymentTransactionWhenPaid() {
-        TransactionStatus transactionStatus1 = new TransactionStatus(1L, "Paid", 5);
-        paymentTransaction1.setTransactionStatus(transactionStatus1);
-        // given
-        given(this.paymentTransactionService.getPaymentTransactionById(paymentTransaction1.getId())).willReturn(paymentTransaction1);
-        given(this.paymentTransactionService.getTransactionStatusById(paymentTransaction1.getTransactionStatus().getId())).willReturn(paymentTransaction1.getTransactionStatus());
-
-
-        // when
-        ResponseEntity<ResponseMessage<PaymentTransaction>> responseEntity = this.paymentTransactionController.deletePaymentTransaction(paymentTransaction1.getId());
-
-        // then
-        ResponseMessage<PaymentTransaction> responseMessage = (ResponseMessage<PaymentTransaction>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        assertFalse(isSuccess);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(paymentTransaction1.getId());
-        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(paymentTransaction1.getId());
-        verify(this.paymentTransactionService, times(0)).deletePaymentTransaction(paymentTransaction1.getId());
-    }
+//    @Test
+//    void deletePaymentTransactionWhenPaid() {
+////        TransactionStatus transactionStatus1 = new TransactionStatus(1L, "Paid", 5);
+////        paymentTransaction1.setTransactionStatus(transactionStatus1);
+//        // given
+//        given(this.paymentTransactionService.getPaymentTransactionById(paymentTransaction1.getId())).willReturn(paymentTransaction1);
+////        given(this.paymentTransactionService.getTransactionStatusById(paymentTransaction1.getTransactionStatus().getId())).willReturn(paymentTransaction1.getTransactionStatus());
+//
+//
+//        // when
+//        ResponseEntity<ResponseMessage<PaymentTransaction>> responseEntity = this.paymentTransactionController.deletePaymentTransaction(paymentTransaction1.getId());
+//
+//        // then
+//        ResponseMessage<PaymentTransaction> responseMessage = (ResponseMessage<PaymentTransaction>) responseEntity.getBody();
+//        assert responseMessage != null;
+//        boolean isSuccess = responseMessage.isSuccess();
+//        assertFalse(isSuccess);
+//        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+//        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(paymentTransaction1.getId());
+////        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(paymentTransaction1.getId());
+//        verify(this.paymentTransactionService, times(0)).deletePaymentTransaction(paymentTransaction1.getId());
+//    }
 
     @Test
     void deletePaymentTransactionWithNonExistingId() {
@@ -755,7 +755,7 @@ class PaymentTransactionControllerTest {
         assertFalse(isSuccess);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(paymentTransaction1.getId());
-        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(paymentTransaction1.getId());
+//        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(paymentTransaction1.getId());
         verify(this.paymentTransactionService, times(0)).deletePaymentTransaction(paymentTransaction1.getId());
     }
 }
