@@ -693,4 +693,69 @@ class PaymentTransactionControllerTest {
         verify(this.paymentTransactionService, times(1)).updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
 
     }
+
+    @Test
+    void deletePaymentTransaction() {
+        // given
+        given(this.paymentTransactionService.getPaymentTransactionById(paymentTransaction1.getId())).willReturn(paymentTransaction1);
+        given(this.paymentTransactionService.getTransactionStatusById(paymentTransaction1.getTransactionStatus().getId())).willReturn(paymentTransaction1.getTransactionStatus());
+
+
+        // when
+        ResponseEntity<ResponseMessage<PaymentTransaction>> responseEntity = this.paymentTransactionController.deletePaymentTransaction(paymentTransaction1.getId());
+
+        // then
+        ResponseMessage<PaymentTransaction> responseMessage = (ResponseMessage<PaymentTransaction>) responseEntity.getBody();
+        assert responseMessage != null;
+        boolean isSuccess = responseMessage.isSuccess();
+        assertTrue(isSuccess);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(paymentTransaction1.getId());
+        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(paymentTransaction1.getId());
+        verify(this.paymentTransactionService, times(1)).deletePaymentTransaction(paymentTransaction1.getId());
+    }
+
+
+    @Test
+    void deletePaymentTransactionWhenPaid() {
+        TransactionStatus transactionStatus1 = new TransactionStatus(1L, "Paid", 5);
+        paymentTransaction1.setTransactionStatus(transactionStatus1);
+        // given
+        given(this.paymentTransactionService.getPaymentTransactionById(paymentTransaction1.getId())).willReturn(paymentTransaction1);
+        given(this.paymentTransactionService.getTransactionStatusById(paymentTransaction1.getTransactionStatus().getId())).willReturn(paymentTransaction1.getTransactionStatus());
+
+
+        // when
+        ResponseEntity<ResponseMessage<PaymentTransaction>> responseEntity = this.paymentTransactionController.deletePaymentTransaction(paymentTransaction1.getId());
+
+        // then
+        ResponseMessage<PaymentTransaction> responseMessage = (ResponseMessage<PaymentTransaction>) responseEntity.getBody();
+        assert responseMessage != null;
+        boolean isSuccess = responseMessage.isSuccess();
+        assertFalse(isSuccess);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(paymentTransaction1.getId());
+        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(paymentTransaction1.getId());
+        verify(this.paymentTransactionService, times(0)).deletePaymentTransaction(paymentTransaction1.getId());
+    }
+
+    @Test
+    void deletePaymentTransactionWithNonExistingId() {
+        // given
+        given(this.paymentTransactionService.getPaymentTransactionById(paymentTransaction1.getId())).willReturn(null);
+
+
+        // when
+        ResponseEntity<ResponseMessage<PaymentTransaction>> responseEntity = this.paymentTransactionController.deletePaymentTransaction(paymentTransaction1.getId());
+
+        // then
+        ResponseMessage<PaymentTransaction> responseMessage = (ResponseMessage<PaymentTransaction>) responseEntity.getBody();
+        assert responseMessage != null;
+        boolean isSuccess = responseMessage.isSuccess();
+        assertFalse(isSuccess);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(paymentTransaction1.getId());
+        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(paymentTransaction1.getId());
+        verify(this.paymentTransactionService, times(0)).deletePaymentTransaction(paymentTransaction1.getId());
+    }
 }

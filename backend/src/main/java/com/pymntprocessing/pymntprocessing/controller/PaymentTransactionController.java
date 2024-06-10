@@ -260,4 +260,41 @@ public class PaymentTransactionController {
                     .body(new ResponseMessage<>(null, false, errorMessage));
         }
     }
+
+
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ResponseMessage<PaymentTransaction>> deletePaymentTransaction(@PathVariable Long id) {
+        PaymentTransaction paymentTransaction = this.paymentTransactionService.getPaymentTransactionById(id);
+
+        if (paymentTransaction == null) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseMessage<>(null, false, "Invalid id provided"));
+        }
+
+        TransactionStatus transactionStatus = paymentTransaction.getTransactionStatus();
+        /**
+         * Check if valid transaction status and if transaction status is not paid
+         */
+        TransactionStatus existingTransactionStatus = this.paymentTransactionService.getTransactionStatusById(transactionStatus.getId());
+        if (existingTransactionStatus == null || (
+                Objects.equals(transactionStatus.getName(), TransactionStatusValue.PAID.toString())
+        )) {
+            String errorMessage = "Unable to delete transaction. Transaction status: " + transactionStatus.getName();
+
+            if (existingTransactionStatus == null) {
+                errorMessage = "Invalid transaction status provided!";
+            }
+
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseMessage<>(null, false, errorMessage));
+        }
+
+        this.paymentTransactionService.deletePaymentTransaction(id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ResponseMessage<>(null, true, "Transaction " + paymentTransaction.getTransactionNumber() + " has been deleted"));
+    }
 }

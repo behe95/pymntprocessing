@@ -69,4 +69,9 @@ public class PaymentTransactionImpl implements PaymentTransactionService{
         }
         return null;
     }
+
+    @Override
+    public void deletePaymentTransaction(Long id) {
+        this.paymentTransactionRepository.deleteById(id);
+    }
 }

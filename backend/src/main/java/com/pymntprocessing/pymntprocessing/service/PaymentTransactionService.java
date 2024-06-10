@@ -22,4 +22,7 @@ public interface PaymentTransactionService {
 
     public PaymentTransaction updatePaymentTransaction(Long id, PaymentTransaction paymentTransaction);
 
+
+    public void deletePaymentTransaction(Long id);
+
 }
