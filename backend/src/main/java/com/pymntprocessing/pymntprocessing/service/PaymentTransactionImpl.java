@@ -3,6 +3,7 @@ package com.pymntprocessing.pymntprocessing.service;
 import com.pymntprocessing.pymntprocessing.model.PaymentTransaction;
 import com.pymntprocessing.pymntprocessing.model.TransactionStatus;
 import com.pymntprocessing.pymntprocessing.model.TransactionType;
+import com.pymntprocessing.pymntprocessing.model.Vendor;
 import com.pymntprocessing.pymntprocessing.repository.PaymentTransactionRepository;
 import com.pymntprocessing.pymntprocessing.repository.TransactionStatusRepository;
 import com.pymntprocessing.pymntprocessing.repository.TransactionTypeRepository;
@@ -57,5 +58,15 @@ public class PaymentTransactionImpl implements PaymentTransactionService{
     public TransactionType getTransactionTypeById(Long id) {
         Optional<TransactionType> transactionType = this.transactionTypeRepository.findById(id);
         return transactionType.orElse(null);
+    }
+
+    @Override
+    public PaymentTransaction updatePaymentTransaction(Long id, PaymentTransaction paymentTransaction) {
+
+        Optional<PaymentTransaction> existingPaymentTransaction = this.paymentTransactionRepository.findById(id);
+        if (existingPaymentTransaction.isPresent()) {
+            return this.paymentTransactionRepository.save(paymentTransaction);
+        }
+        return null;
     }
 }

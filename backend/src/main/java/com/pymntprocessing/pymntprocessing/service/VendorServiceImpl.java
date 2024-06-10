@@ -39,8 +39,8 @@ public class VendorServiceImpl implements VendorService{
 
     @Override
     public Vendor updateVendor(Long id, Vendor vendor) {
-        Optional<Vendor> existingVednor = this.vendorRepository.findById(id);
-        if (existingVednor.isPresent()) {
+        Optional<Vendor> existingVendor = this.vendorRepository.findById(id);
+        if (existingVendor.isPresent()) {
             return this.vendorRepository.save(vendor);
         }
         return null;

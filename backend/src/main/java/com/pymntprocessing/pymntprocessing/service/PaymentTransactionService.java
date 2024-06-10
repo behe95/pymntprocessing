@@ -19,4 +19,7 @@ public interface PaymentTransactionService {
 
     public TransactionType getTransactionTypeById(Long id);
 
+
+    public PaymentTransaction updatePaymentTransaction(Long id, PaymentTransaction paymentTransaction);
+
 }

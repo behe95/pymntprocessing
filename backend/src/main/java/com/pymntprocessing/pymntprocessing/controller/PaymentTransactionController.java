@@ -121,7 +121,7 @@ public class PaymentTransactionController {
          * check if it's a valid transaction status
          */
         TransactionStatus existingTransactionStatus = this.paymentTransactionService.getTransactionStatusById(transactionStatus.getId());
-        if (existingTransactionStatus == null || !Objects.equals(existingTransactionStatus.getName(), TransactionStatusValue.OPEN.toString())) {
+        if (existingTransactionStatus == null || !Objects.equals(transactionStatus.getName(), TransactionStatusValue.OPEN.toString())) {
             invalidRequestBody = true;
             errorMessage = "Invalid transaction status provided!";
             return ResponseEntity
@@ -134,8 +134,8 @@ public class PaymentTransactionController {
          */
         TransactionType existingTransactionType = this.paymentTransactionService.getTransactionTypeById(transactionType.getId());
         if (existingTransactionType == null
-                || (!Objects.equals(existingTransactionType.getName(), TransactionTypeValue.DEBIT.toString())
-                && !Objects.equals(existingTransactionType.getName(), TransactionTypeValue.CREDIT.toString()))) {
+                || (!Objects.equals(transactionType.getName(), TransactionTypeValue.DEBIT.toString())
+                && !Objects.equals(transactionType.getName(), TransactionTypeValue.CREDIT.toString()))) {
             invalidRequestBody = true;
             errorMessage = "Invalid transaction type provided!";
             return ResponseEntity
@@ -164,5 +164,100 @@ public class PaymentTransactionController {
                     .body(new ResponseMessage<>(null, false, errorMessage));
         }
 
+    }
+
+    @PutMapping("/{id")
+    public ResponseEntity<ResponseMessage<PaymentTransaction>> updatePaymentTransaction(@PathVariable Long id, @RequestBody PaymentTransaction paymentTransaction) {
+
+        Vendor vendor = paymentTransaction.getVendor();
+        TransactionStatus transactionStatus = paymentTransaction.getTransactionStatus();
+        TransactionType transactionType = paymentTransaction.getTransactionType();
+
+        String errorMessage = "";
+        boolean invalidRequestBody = false;
+
+        /**
+         * validate data
+         */
+        if (vendor == null || vendor.getId() == null) {
+            invalidRequestBody = true;
+            errorMessage = "Vendor information not provided!";
+        } else if (transactionStatus == null || transactionStatus.getId() == null) {
+            invalidRequestBody = true;
+            errorMessage = "Transaction status not provided!";
+        } else if (transactionType == null || transactionType.getId() == null) {
+            invalidRequestBody = true;
+            errorMessage = "Transaction type not provided!";
+        }
+
+        if (invalidRequestBody) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseMessage<>(null, false, errorMessage));
+        }
+
+        /**
+         * check if it's a valid vendor
+         */
+
+        Vendor existingVendor = this.vendorService.getVendorById(vendor.getId());
+
+        if (existingVendor == null) {
+            invalidRequestBody = true;
+            errorMessage = "Invalid vendor provided!";
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseMessage<>(null, false, errorMessage));
+        }
+
+        /**
+         * Check if valid transaction status and if transaction status is still open or committed
+         */
+        TransactionStatus existingTransactionStatus = this.paymentTransactionService.getTransactionStatusById(transactionStatus.getId());
+        if (existingTransactionStatus == null || (
+                !Objects.equals(transactionStatus.getName(), TransactionStatusValue.OPEN.toString())
+                        && !Objects.equals(transactionStatus.getName(), TransactionStatusValue.COMMITTED.toString())
+        )) {
+            invalidRequestBody = true;
+            errorMessage = "Unable to update transaction. Transaction status: " + transactionStatus.getName();
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseMessage<>(null, false, errorMessage));
+        }
+
+        /**
+         * check if it's a valid transaction type
+         */
+        TransactionType existingTransactionType = this.paymentTransactionService.getTransactionTypeById(transactionType.getId());
+        if (existingTransactionType == null
+                || (!Objects.equals(transactionType.getName(), TransactionTypeValue.DEBIT.toString())
+                && !Objects.equals(transactionType.getName(), TransactionTypeValue.CREDIT.toString()))) {
+            invalidRequestBody = true;
+            errorMessage = "Invalid transaction type provided!";
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseMessage<>(null, false, errorMessage));
+        }
+
+        try {
+            PaymentTransaction updatedPaymentTransaction = this.paymentTransactionService.updatePaymentTransaction(id, paymentTransaction);
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(new ResponseMessage<>(updatedPaymentTransaction, true, "Payment transaction has been updated!"));
+        } catch (DataIntegrityViolationException e) {
+            errorMessage = "ERROR: Duplicate entry!";
+            if (e.getRootCause() != null) {
+                errorMessage = e.getRootCause().getMessage();
+            }
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseMessage<>(null, false, errorMessage));
+        } catch (Exception ex) {
+            errorMessage = "ERROR: Internal Server Error! " + ex.getMessage();
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseMessage<>(null, false, errorMessage));
+        }
     }
 }
