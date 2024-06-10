@@ -27,7 +27,7 @@ public class VendorController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseMessage<Vendor>> getVednorById(@PathVariable Long id) {
+    public ResponseEntity<ResponseMessage<Vendor>> getVendorById(@PathVariable Long id) {
         Vendor vendor = this.vendorService.getVendorById(id);
         if (vendor != null) {
             return ResponseEntity

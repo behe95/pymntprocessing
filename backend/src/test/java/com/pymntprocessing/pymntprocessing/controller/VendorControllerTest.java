@@ -48,43 +48,43 @@ class VendorControllerTest {
     }
 
     @Test
-    void getVednorByIdWhenFound() {
+    void getVendorByIdWhenFound() {
         // given
         given(this.vendorService.getVendorById(1L)).willReturn(vendor1);
 
         // when
-        ResponseEntity<ResponseMessage<Vendor>> responseEntity = this.vendorController.getVednorById(1L);
+        ResponseEntity<ResponseMessage<Vendor>> responseEntity = this.vendorController.getVendorById(1L);
 
         // then
         ResponseMessage<Vendor> responseMessage = (ResponseMessage<Vendor>) responseEntity.getBody();
         assert responseMessage != null;
         boolean isSuccess = responseMessage.isSuccess();
-        Vendor responseVednor = responseMessage.getData();
+        Vendor responseVendor = responseMessage.getData();
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertTrue(isSuccess);
-        assertEquals(vendor1, responseVednor);
+        assertEquals(vendor1, responseVendor);
         verify(this.vendorService, times(1)).getVendorById(1L);
 
     }
 
     @Test
-    void getVednorByIdWhenNotFound() {
+    void getVendorByIdWhenNotFound() {
         // given
         given(this.vendorService.getVendorById(11L)).willReturn(null);
 
         // when
-        ResponseEntity<ResponseMessage<Vendor>> responseEntity = this.vendorController.getVednorById(11L);
+        ResponseEntity<ResponseMessage<Vendor>> responseEntity = this.vendorController.getVendorById(11L);
 
         // then
         ResponseMessage<Vendor> responseMessage = (ResponseMessage<Vendor>) responseEntity.getBody();
         assert responseMessage != null;
         boolean isSuccess = responseMessage.isSuccess();
-        Vendor responseVednor = responseMessage.getData();
+        Vendor responseVendor = responseMessage.getData();
 
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
         assertFalse(isSuccess);
-        assertNull(responseVednor);
+        assertNull(responseVendor);
         verify(this.vendorService, times(1)).getVendorById(11L);
 
     }

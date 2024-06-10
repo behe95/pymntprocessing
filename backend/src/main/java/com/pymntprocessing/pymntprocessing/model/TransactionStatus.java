@@ -3,15 +3,25 @@ package com.pymntprocessing.pymntprocessing.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "Vendor")
-public class Vendor {
+@Table(name = "TransactionStatus")
+public class TransactionStatus {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "vendorPk")
+    @Column(name = "transactionStatusPk")
     private Long id;
+
     private String name;
-    private String address;
-    private String vendorId;
+
+    private int code;
+
+    public TransactionStatus() {
+    }
+
+    public TransactionStatus(Long id, String name, int code) {
+        this.id = id;
+        this.name = name;
+        this.code = code;
+    }
 
     public Long getId() {
         return id;
@@ -29,20 +39,11 @@ public class Vendor {
         this.name = name;
     }
 
-    public String getAddress() {
-        return address;
+    public int getCode() {
+        return code;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setCode(int code) {
+        this.code = code;
     }
-
-    public String getVendorId() {
-        return vendorId;
-    }
-
-    public void setVendorId(String vendorId) {
-        this.vendorId = vendorId;
-    }
-
 }
