@@ -43,12 +43,7 @@ public class PaymentTransactionImpl implements PaymentTransactionService{
     public PaymentTransaction createPaymentTransaction(PaymentTransaction paymentTransaction) {
         return this.paymentTransactionRepository.save(paymentTransaction);
     }
-//
-//    @Override
-//    public TransactionStatus getTransactionStatusById(Long id) {
-//        Optional<TransactionStatus> transactionStatus = this.transactionStatusRepository.findById(id);
-//        return transactionStatus.orElse(null);
-//    }
+
 
     @Override
     public TransactionType getTransactionTypeById(Long id) {

@@ -14,7 +14,7 @@ CREATE TABLE PaymentTransaction (
     transactionAmount DECIMAL(15,2),
     transactionDate DATETIME,
     created DATETIME,
-    updated DATETIME
+    modified DATETIME
 );
 
 
@@ -33,8 +33,8 @@ VALUES
     ('Credit', -1, 1), ('Debit', 1, 2);
 
 
-CREATE TABLE PaymentInvoice (
-    paymentInvoicePk INT PRIMARY KEY AUTO_INCREMENT,
+CREATE TABLE Invoice (
+    invoicePk INT PRIMARY KEY AUTO_INCREMENT,
     fkVendor INT,
     fkCheck INT,
     fkInvoiceStatus INT,        -- batched, listed, posted, paid
@@ -46,7 +46,7 @@ CREATE TABLE PaymentInvoice (
     invoiceDueDate DATETIME,
     invoiceReceivedDate DATETIME,
     created DATETIME,
-    updated DATETIME
+    modified DATETIME
 );
 
 CREATE TABLE InvoiceStatus (
