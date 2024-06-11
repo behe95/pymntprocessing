@@ -1,5 +1,6 @@
 package com.pymntprocessing.pymntprocessing.controller;
 
+import com.pymntprocessing.pymntprocessing.constant.ApiConstants;
 import com.pymntprocessing.pymntprocessing.model.ResponseMessage;
 import com.pymntprocessing.pymntprocessing.model.Vendor;
 import com.pymntprocessing.pymntprocessing.service.VendorService;
@@ -15,7 +16,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/vendor")
+@RequestMapping(ApiConstants.V1.Vendor.VENDOR_PATH)
 @CrossOrigin(origins = "http://localhost:3000")
 public class VendorController {
 

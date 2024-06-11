@@ -1,5 +1,6 @@
 package com.pymntprocessing.pymntprocessing.controller;
 
+import com.pymntprocessing.pymntprocessing.constant.ApiConstants;
 import com.pymntprocessing.pymntprocessing.constant.db.InvoiceStatusValue;
 import com.pymntprocessing.pymntprocessing.constant.db.TransactionTypeValue;
 import com.pymntprocessing.pymntprocessing.model.*;
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.Objects;
 
 @RestController
-@RequestMapping("/invoice")
+@RequestMapping(ApiConstants.V1.Invoice.INVOICE_PATH)
 @CrossOrigin(origins = "http://localhost:3000")
 public class InvoiceController {
     private final InvoiceService invoiceService;
@@ -120,7 +121,7 @@ public class InvoiceController {
         InvoiceStatus existingInvoiceStatus = this.invoiceService.getInvoiceStatusById(invoiceStatus.getId());
         if (existingInvoiceStatus == null || !Objects.equals(invoiceStatus.getName(), InvoiceStatusValue.OPEN.toString())) {
             invalidRequestBody = true;
-            errorMessage = "Invalid transaction status provided!";
+            errorMessage = "Invalid invoice status provided!";
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .body(new ResponseMessage<>(null, false, errorMessage));
@@ -150,7 +151,7 @@ public class InvoiceController {
 
     }
 
-    @PutMapping("/{id")
+    @PutMapping("/{id}")
     public ResponseEntity<ResponseMessage<Invoice>> updateInvoice(@PathVariable Long id, @RequestBody Invoice invoice) {
 
         Vendor vendor = invoice.getVendor();

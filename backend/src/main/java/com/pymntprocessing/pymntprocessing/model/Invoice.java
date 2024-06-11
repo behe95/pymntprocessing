@@ -3,6 +3,7 @@ package com.pymntprocessing.pymntprocessing.model;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "Invoice")
@@ -22,9 +23,10 @@ public class Invoice {
     private InvoiceStatus invoiceStatus;
 
 
-    @ManyToOne
-    @JoinColumn(name = "fkPaymentTransaction", referencedColumnName = "paymentTransactionPk")
-    private PaymentTransaction paymentTransaction;
+//    @OneToMany(mappedBy = "invoice")
+    @OneToMany
+    @JoinColumn(name = "fkInvoice", referencedColumnName = "invoicePk")
+    private List<PaymentTransaction> paymentTransaction;
 
     private int invoiceNumber;
 
@@ -62,11 +64,11 @@ public class Invoice {
         this.invoiceStatus = invoiceStatus;
     }
 
-    public PaymentTransaction getPaymentTransaction() {
+    public List<PaymentTransaction> getPaymentTransaction() {
         return paymentTransaction;
     }
 
-    public void setPaymentTransaction(PaymentTransaction paymentTransaction) {
+    public void setPaymentTransaction(List<PaymentTransaction> paymentTransaction) {
         this.paymentTransaction = paymentTransaction;
     }
 

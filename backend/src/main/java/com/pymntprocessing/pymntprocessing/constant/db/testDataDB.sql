@@ -18,15 +18,15 @@ VALUES
 INSERT INTO Vendor
     (name, address, vendorId)
 VALUES
-    ("Vendor CO", "123 Main St. , Main City, NY, 02100")
-    ,("Test Vendor", "55 Test St. , Test City, CA, 01100");
+    ("Vendor CO", "123 Main St. , Main City, NY, 02100", "VI00001")
+    ,("Test Vendor", "55 Test St. , Test City, CA, 01100", "VI00002");
 
 
 INSERT INTO PaymentTransaction
-    (fkVendor, fkTransactionType, gkGLAccount, fkInvoice, transactionNumber, transactionDescription, transactionAmount, transactionDate, created, modified)
+    (fkVendor, fkTransactionType, fkGLAccount, fkInvoice, transactionNumber, transactionDescription, transactionAmount, transactionDate, created, modified)
 VALUES
     (1, 2, NULL, 1, 1, "Project One - 1/3", 5500.16, NOW(), DATE_SUB(NOW(), INTERVAL 5 DAY), NULL)
-    ,(1, 2, NULL, 1, 1, "Project One - 2/3", 1500.85, NOW(), DATE_SUB(NOW(), INTERVAL 2 DAY), NULL);
+    ,(1, 2, NULL, 1, 2, "Project One - 2/3", 1500.85, NOW(), DATE_SUB(NOW(), INTERVAL 2 DAY), NULL);
 
 
 

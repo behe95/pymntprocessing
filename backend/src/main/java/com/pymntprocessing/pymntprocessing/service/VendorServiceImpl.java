@@ -2,6 +2,7 @@ package com.pymntprocessing.pymntprocessing.service;
 
 import com.pymntprocessing.pymntprocessing.model.Vendor;
 import com.pymntprocessing.pymntprocessing.repository.VendorRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +48,7 @@ public class VendorServiceImpl implements VendorService{
     }
 
     @Override
+    @Transactional
     public void deleteVendor(Long id) {
         this.vendorRepository.deleteById(id);
     }

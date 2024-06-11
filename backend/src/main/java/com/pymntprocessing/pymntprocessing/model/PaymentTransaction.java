@@ -14,7 +14,10 @@ public class PaymentTransaction {
     @JoinColumn(name = "fkVendor", referencedColumnName = "vendorPk")
     private Vendor vendor;
 
-
+//    @ManyToOne
+//    @JoinColumn(name = "fkInvoice", referencedColumnName = "invoicePk")
+    @Transient
+    private Invoice invoice;
 
     @OneToOne
     @JoinColumn(name = "fkTransactionType", referencedColumnName = "transactionTypePk")
@@ -43,13 +46,13 @@ public class PaymentTransaction {
     }
 
 
-//    public TransactionStatus getTransactionStatus() {
-//        return transactionStatus;
-//    }
-//
-//    public void setTransactionStatus(TransactionStatus transactionStatus) {
-//        this.transactionStatus = transactionStatus;
-//    }
+    public Invoice getInvoice() {
+        return invoice;
+    }
+
+    public void setInvoice(Invoice invoice) {
+        this.invoice = invoice;
+    }
 
     public TransactionType getTransactionType() {
         return transactionType;

@@ -1,5 +1,6 @@
 package com.pymntprocessing.pymntprocessing.controller;
 
+import com.pymntprocessing.pymntprocessing.constant.ApiConstants;
 import com.pymntprocessing.pymntprocessing.constant.db.InvoiceStatusValue;
 import com.pymntprocessing.pymntprocessing.constant.db.TransactionTypeValue;
 import com.pymntprocessing.pymntprocessing.model.*;
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.Objects;
 
 @RestController
-@RequestMapping("/paymenttransaction")
+@RequestMapping(ApiConstants.V1.PaymentTransaction.PAYMENT_TRANSACTION_PATH)
 @CrossOrigin(origins = "http://localhost:3000")
 public class PaymentTransactionController {
     private final PaymentTransactionService paymentTransactionService;
@@ -168,7 +169,7 @@ public class PaymentTransactionController {
 
     }
 
-    @PutMapping("/{id")
+    @PutMapping("/{id}")
     public ResponseEntity<ResponseMessage<PaymentTransaction>> updatePaymentTransaction(@PathVariable Long id, @RequestBody PaymentTransaction paymentTransaction) {
 
         Vendor vendor = paymentTransaction.getVendor();
