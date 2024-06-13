@@ -50,3 +50,12 @@ CREATE TABLE InvoiceStatus (
     name VARCHAR(100),
     code INT UNIQUE
 );
+
+
+CREATE TABLE Product (
+    productPk INT PRIMARY KEY AUTO_INCREMENT,
+    productName VARCHAR(100),
+    productDescription VARCHAR(255),
+    created DATETIME,
+    modified DATETIME
+);

@@ -36,3 +36,9 @@ INSERT INTO Invoice
 VALUES
     (1, NULL, 1, 1, "Invoice One", NULL, NOW(), DATE_ADD(NOW(), INTERVAL 5 DAY), NULL, NOW(), NULL)
     ,(1, NULL, 1, 2, "2nd Invoice", NULL, NOW(), DATE_ADD(NOW(), INTERVAL 2 DAY), NULL, NOW(), NULL);
+
+INSERT INTO Product
+    (productName, productDescription, created, modified)
+VALUES
+    ('Product One', 'Product One Description Test Data', NOW(), NULL)
+    ,('Product Two', 'Product Two Description Test Data', NOW(), NULL);
