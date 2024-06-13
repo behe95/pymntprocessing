@@ -20,6 +20,7 @@ public class ModelMapperConfig {
 
         modelMapper.createTypeMap(PaymentTransaction.class, PaymentTransactionDTO.class).addMappings(configurableConditionExpression -> {
             configurableConditionExpression.skip(PaymentTransaction::getInvoice, PaymentTransactionDTO::setInvoiceDTO);
+            configurableConditionExpression.skip(PaymentTransaction::getProduct, PaymentTransactionDTO::setProductDTO);
         });
 
 

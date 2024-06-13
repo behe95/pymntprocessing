@@ -7,6 +7,7 @@ CREATE TABLE Vendor (
 
 CREATE TABLE PaymentTransaction (
     paymentTransactionPk INT PRIMARY KEY AUTO_INCREMENT,
+    fkProduct INT,
     fkVendor INT,
     fkTransactionType INT,          -- debit, credit
     fkGLAccount INT,

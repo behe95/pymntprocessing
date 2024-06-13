@@ -2,6 +2,7 @@ package com.pymntprocessing.pymntprocessing.dto;
 
 import com.pymntprocessing.pymntprocessing.entity.Invoice;
 import com.pymntprocessing.pymntprocessing.entity.PaymentTransaction;
+import com.pymntprocessing.pymntprocessing.entity.Product;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,10 @@ public class PaymentTransactionConverter {
             if (paymentTransaction.getInvoice() != null) {
                 paymentTransactionDTO.setInvoiceDTO(this.modelMapper.map(paymentTransaction.getInvoice(), InvoiceDTO.class));
             }
+
+            if (paymentTransaction.getProduct() != null) {
+                paymentTransactionDTO.setProductDTO(this.modelMapper.map(paymentTransaction.getProduct(), ProductDTO.class));
+            }
         }
         return paymentTransactionDTO;
     }
@@ -33,6 +38,10 @@ public class PaymentTransactionConverter {
             paymentTransaction = this.modelMapper.map(paymentTransactionDTO, PaymentTransaction.class);
             if (paymentTransactionDTO.getInvoiceDTO() != null) {
                 paymentTransaction.setInvoice(this.modelMapper.map(paymentTransactionDTO.getInvoiceDTO(), Invoice.class));
+            }
+
+            if (paymentTransactionDTO.getProductDTO() != null) {
+                paymentTransaction.setProduct(this.modelMapper.map(paymentTransactionDTO.getProductDTO(), Product.class));
             }
         }
         return paymentTransaction;

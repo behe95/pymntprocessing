@@ -10,6 +10,10 @@ public class PaymentTransaction {
     @Column(name = "paymentTransactionPk")
     private Long id;
 
+    @OneToOne
+    @JoinColumn(name = "fkProduct", referencedColumnName = "productPk")
+    private Product product;
+
     @ManyToOne
     @JoinColumn(name = "fkVendor", referencedColumnName = "vendorPk")
     private Vendor vendor;
@@ -34,6 +38,14 @@ public class PaymentTransaction {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
     }
 
     public Vendor getVendor() {

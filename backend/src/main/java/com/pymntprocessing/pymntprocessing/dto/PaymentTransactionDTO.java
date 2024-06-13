@@ -5,6 +5,8 @@ import com.pymntprocessing.pymntprocessing.entity.Vendor;
 
 public class PaymentTransactionDTO {
     private Long id;
+
+    private ProductDTO productDTO;
     private Vendor vendor;
     private InvoiceDTO invoiceDTO;
     private TransactionType transactionType;
@@ -19,6 +21,14 @@ public class PaymentTransactionDTO {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public ProductDTO getProductDTO() {
+        return productDTO;
+    }
+
+    public void setProductDTO(ProductDTO productDTO) {
+        this.productDTO = productDTO;
     }
 
     public Vendor getVendor() {
