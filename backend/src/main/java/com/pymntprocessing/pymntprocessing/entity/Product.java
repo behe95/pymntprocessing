@@ -20,6 +20,7 @@ public class Product {
     private String productDescription;
 
     private LocalDateTime created;
+
     private LocalDateTime modified;
 
 

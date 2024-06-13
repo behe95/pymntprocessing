@@ -29,5 +29,12 @@ public class ApiConstants {
         public static class Invoice {
             public static final String INVOICE_PATH = V1_API_BASE_PATH + "/invoice";
         }
+
+        /**
+         * Invoice API
+         */
+        public static class Product {
+            public static final String PRODUCT_PATH = V1_API_BASE_PATH + "/product";
+        }
     }
 }

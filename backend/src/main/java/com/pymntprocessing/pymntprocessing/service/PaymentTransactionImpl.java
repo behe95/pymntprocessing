@@ -38,12 +38,7 @@ public class PaymentTransactionImpl implements PaymentTransactionService{
         PaymentTransactionDTO paymentTransactionDTO = null;
 
         if (paymentTransaction.isPresent()) {
-            paymentTransactionDTO = this.modelMapper.map(paymentTransaction.get(), PaymentTransactionDTO.class);
-            InvoiceDTO invoiceDTO = null;
-            if (paymentTransaction.get().getInvoice() != null) {
-                invoiceDTO = this.modelMapper.map(paymentTransaction.get().getInvoice(), InvoiceDTO.class);
-            }
-            paymentTransactionDTO.setInvoiceDTO(invoiceDTO);
+            paymentTransactionDTO = this.paymentTransactionConverter.toDTO(paymentTransaction.get());
         }
 
         return paymentTransactionDTO;
