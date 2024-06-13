@@ -1,10 +1,13 @@
 package com.pymntprocessing.pymntprocessing.service;
 
-import com.pymntprocessing.pymntprocessing.model.PaymentTransaction;
-import com.pymntprocessing.pymntprocessing.model.TransactionType;
-import com.pymntprocessing.pymntprocessing.model.Vendor;
+import com.pymntprocessing.pymntprocessing.dto.InvoiceDTO;
+import com.pymntprocessing.pymntprocessing.dto.PaymentTransactionConverter;
+import com.pymntprocessing.pymntprocessing.dto.PaymentTransactionDTO;
+import com.pymntprocessing.pymntprocessing.entity.PaymentTransaction;
+import com.pymntprocessing.pymntprocessing.entity.TransactionType;
 import com.pymntprocessing.pymntprocessing.repository.PaymentTransactionRepository;
 import com.pymntprocessing.pymntprocessing.repository.TransactionTypeRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,31 +20,48 @@ public class PaymentTransactionImpl implements PaymentTransactionService{
     private final PaymentTransactionRepository paymentTransactionRepository;
     private final TransactionTypeRepository transactionTypeRepository;
 
+    private final ModelMapper modelMapper;
+
+    private final PaymentTransactionConverter paymentTransactionConverter;
+
     @Autowired
-    public PaymentTransactionImpl(PaymentTransactionRepository paymentTransactionRepository, TransactionTypeRepository transactionTypeRepository) {
+    public PaymentTransactionImpl(PaymentTransactionRepository paymentTransactionRepository, TransactionTypeRepository transactionTypeRepository, ModelMapper modelMapper, PaymentTransactionConverter paymentTransactionConverter) {
         this.paymentTransactionRepository = paymentTransactionRepository;
         this.transactionTypeRepository = transactionTypeRepository;
+        this.modelMapper = modelMapper;
+        this.paymentTransactionConverter = paymentTransactionConverter;
     }
 
     @Override
-    public PaymentTransaction getPaymentTransactionById(Long id) {
+    public PaymentTransactionDTO getPaymentTransactionById(Long id) {
         Optional<PaymentTransaction> paymentTransaction = this.paymentTransactionRepository.findById(id);
-        return paymentTransaction.orElse(null);
+        PaymentTransactionDTO paymentTransactionDTO = null;
+
+        if (paymentTransaction.isPresent()) {
+            paymentTransactionDTO = this.modelMapper.map(paymentTransaction.get(), PaymentTransactionDTO.class);
+            InvoiceDTO invoiceDTO = null;
+            if (paymentTransaction.get().getInvoice() != null) {
+                invoiceDTO = this.modelMapper.map(paymentTransaction.get().getInvoice(), InvoiceDTO.class);
+            }
+            paymentTransactionDTO.setInvoiceDTO(invoiceDTO);
+        }
+
+        return paymentTransactionDTO;
     }
 
     @Override
-    public List<PaymentTransaction> getAllPaymentTransaction() {
-        return this.paymentTransactionRepository.findAll();
+    public List<PaymentTransactionDTO> getAllPaymentTransaction() {
+        return this.paymentTransactionRepository.findAll().stream().map(paymentTransactionConverter::toDTO).toList();
     }
 
     @Override
-    public List<PaymentTransaction> getAllPaymentTransactionByVendorId(Long id) {
-        return this.paymentTransactionRepository.findAllByVendorId(id);
+    public List<PaymentTransactionDTO> getAllPaymentTransactionByVendorId(Long id) {
+        return this.paymentTransactionRepository.findAllByVendorId(id).stream().map(paymentTransactionConverter::toDTO).toList();
     }
 
     @Override
-    public PaymentTransaction createPaymentTransaction(PaymentTransaction paymentTransaction) {
-        return this.paymentTransactionRepository.save(paymentTransaction);
+    public PaymentTransactionDTO createPaymentTransaction(PaymentTransactionDTO paymentTransactionDTO) {
+        return paymentTransactionConverter.toDTO(this.paymentTransactionRepository.save(this.paymentTransactionConverter.toEntity(paymentTransactionDTO)));
     }
 
 
@@ -52,11 +72,11 @@ public class PaymentTransactionImpl implements PaymentTransactionService{
     }
 
     @Override
-    public PaymentTransaction updatePaymentTransaction(Long id, PaymentTransaction paymentTransaction) {
+    public PaymentTransactionDTO updatePaymentTransaction(Long id, PaymentTransactionDTO paymentTransactionDTO) {
 
         Optional<PaymentTransaction> existingPaymentTransaction = this.paymentTransactionRepository.findById(id);
         if (existingPaymentTransaction.isPresent()) {
-            return this.paymentTransactionRepository.save(paymentTransaction);
+            return this.paymentTransactionConverter.toDTO(this.paymentTransactionRepository.save(this.paymentTransactionConverter.toEntity(paymentTransactionDTO)));
         }
         return null;
     }

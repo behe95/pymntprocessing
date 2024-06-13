@@ -1,8 +1,6 @@
 package com.pymntprocessing.pymntprocessing.service;
 
-import com.pymntprocessing.pymntprocessing.model.Vendor;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
+import com.pymntprocessing.pymntprocessing.entity.Vendor;
 
 import java.util.List;
 

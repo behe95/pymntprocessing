@@ -1,10 +1,13 @@
 package com.pymntprocessing.pymntprocessing.service;
 
-import com.pymntprocessing.pymntprocessing.model.Invoice;
-import com.pymntprocessing.pymntprocessing.model.InvoiceStatus;
-import com.pymntprocessing.pymntprocessing.model.PaymentTransaction;
+import com.pymntprocessing.pymntprocessing.dto.InvoiceConverter;
+import com.pymntprocessing.pymntprocessing.dto.InvoiceDTO;
+import com.pymntprocessing.pymntprocessing.dto.PaymentTransactionDTO;
+import com.pymntprocessing.pymntprocessing.entity.Invoice;
+import com.pymntprocessing.pymntprocessing.entity.InvoiceStatus;
 import com.pymntprocessing.pymntprocessing.repository.InvoiceRepository;
 import com.pymntprocessing.pymntprocessing.repository.InvoiceStatusRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,32 +20,47 @@ public class InvoiceServiceImpl implements InvoiceService{
     private final InvoiceRepository invoiceRepository;
     private final InvoiceStatusRepository invoiceStatusRepository;
 
+    private final ModelMapper modelMapper;
+
+    private final InvoiceConverter invoiceConverter;
+
     @Autowired
-    public InvoiceServiceImpl(InvoiceRepository paymentTransactionRepository, InvoiceStatusRepository invoiceStatusRepository) {
+    public InvoiceServiceImpl(InvoiceRepository paymentTransactionRepository, InvoiceStatusRepository invoiceStatusRepository, ModelMapper modelMapper, InvoiceConverter invoiceConverter) {
         this.invoiceRepository = paymentTransactionRepository;
         this.invoiceStatusRepository = invoiceStatusRepository;
+        this.modelMapper = modelMapper;
+        this.invoiceConverter = invoiceConverter;
     }
 
 
     @Override
-    public Invoice getInvoiceById(Long id) {
+    public InvoiceDTO getInvoiceById(Long id) {
         Optional<Invoice> invoice = this.invoiceRepository.findById(id);
-        return invoice.orElse(null);
+        InvoiceDTO invoiceDTO = null;
+
+        if (invoice.isPresent()) {
+            invoiceDTO = this.modelMapper.map(invoice.get(), InvoiceDTO.class);
+            List<PaymentTransactionDTO> paymentTransactionDTOS = invoice.get().getPaymentTransaction().stream().map(paymentTransaction -> this.modelMapper.map(paymentTransaction, PaymentTransactionDTO.class)).toList();
+            invoiceDTO.setPaymentTransactionDTO(paymentTransactionDTOS);
+        }
+        System.out.println(invoiceDTO);
+
+        return invoiceDTO;
     }
 
     @Override
-    public List<Invoice> getAllInvoice() {
-        return this.invoiceRepository.findAll();
+    public List<InvoiceDTO> getAllInvoice() {
+        return this.invoiceRepository.findAll().stream().map(this.invoiceConverter::toDTO).toList();
     }
 
     @Override
-    public List<Invoice> getAllInvoiceByVendorId(Long id) {
-        return this.invoiceRepository.findAllByVendorId(id);
+    public List<InvoiceDTO> getAllInvoiceByVendorId(Long id) {
+        return this.invoiceRepository.findAllByVendorId(id).stream().map(this.invoiceConverter::toDTO).toList();
     }
 
     @Override
-    public Invoice createInvoice(Invoice invoice) {
-        return this.invoiceRepository.save(invoice);
+    public InvoiceDTO createInvoice(InvoiceDTO invoiceDTO) {
+        return this.invoiceConverter.toDTO(this.invoiceRepository.save(this.invoiceConverter.toEntity(invoiceDTO)));
     }
 
     @Override
@@ -53,11 +71,11 @@ public class InvoiceServiceImpl implements InvoiceService{
 
 
     @Override
-    public Invoice updateInvoice(Long id, Invoice invoice) {
+    public InvoiceDTO updateInvoice(Long id, InvoiceDTO invoiceDTO) {
 
         Optional<Invoice> existingInvoice = this.invoiceRepository.findById(id);
         if (existingInvoice.isPresent()) {
-            return this.invoiceRepository.save(invoice);
+            return this.invoiceConverter.toDTO(this.invoiceRepository.save(this.invoiceConverter.toEntity(invoiceDTO)));
         }
         return null;
     }

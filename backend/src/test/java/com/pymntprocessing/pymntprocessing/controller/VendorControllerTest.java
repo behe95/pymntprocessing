@@ -1,7 +1,7 @@
 package com.pymntprocessing.pymntprocessing.controller;
 
-import com.pymntprocessing.pymntprocessing.model.ResponseMessage;
-import com.pymntprocessing.pymntprocessing.model.Vendor;
+import com.pymntprocessing.pymntprocessing.entity.ResponseMessage;
+import com.pymntprocessing.pymntprocessing.entity.Vendor;
 import com.pymntprocessing.pymntprocessing.service.VendorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
 import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)

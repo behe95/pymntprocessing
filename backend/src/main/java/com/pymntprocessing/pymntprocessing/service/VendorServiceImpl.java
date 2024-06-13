@@ -1,11 +1,9 @@
 package com.pymntprocessing.pymntprocessing.service;
 
-import com.pymntprocessing.pymntprocessing.model.Vendor;
+import com.pymntprocessing.pymntprocessing.entity.Vendor;
 import com.pymntprocessing.pymntprocessing.repository.VendorRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

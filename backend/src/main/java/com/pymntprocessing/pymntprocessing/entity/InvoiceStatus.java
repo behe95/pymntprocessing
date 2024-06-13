@@ -1,26 +1,23 @@
-package com.pymntprocessing.pymntprocessing.model;
-
+package com.pymntprocessing.pymntprocessing.entity;
 
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "TransactionType")
-public class TransactionType {
+@Table(name = "InvoiceStatus")
+public class InvoiceStatus {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "transactionTypePk")
+    @Column(name = "invoiceStatusPk")
     private Long id;
 
     private String name;
 
-    private int multiplier;
-
     private int code;
 
-    public TransactionType() {
+    public InvoiceStatus() {
     }
 
-    public TransactionType(Long id, String name, int multiplier, int code) {
+    public InvoiceStatus(Long id, String name, int code) {
         this.id = id;
         this.name = name;
         this.code = code;
@@ -40,14 +37,6 @@ public class TransactionType {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public int getMultiplier() {
-        return multiplier;
-    }
-
-    public void setMultiplier(int multiplier) {
-        this.multiplier = multiplier;
     }
 
     public int getCode() {

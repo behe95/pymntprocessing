@@ -1,4 +1,4 @@
-package com.pymntprocessing.pymntprocessing.model;
+package com.pymntprocessing.pymntprocessing.entity;
 
 import jakarta.persistence.*;
 

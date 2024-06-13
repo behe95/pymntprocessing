@@ -1,33 +1,17 @@
-package com.pymntprocessing.pymntprocessing.model;
+package com.pymntprocessing.pymntprocessing.dto;
 
-import jakarta.persistence.*;
+import com.pymntprocessing.pymntprocessing.entity.TransactionType;
+import com.pymntprocessing.pymntprocessing.entity.Vendor;
 
-@Entity
-@Table(name = "PaymentTransaction")
-public class PaymentTransaction {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "paymentTransactionPk")
+public class PaymentTransactionDTO {
     private Long id;
-
-    @ManyToOne
-    @JoinColumn(name = "fkVendor", referencedColumnName = "vendorPk")
     private Vendor vendor;
-
-//    @ManyToOne
-//    @JoinColumn(name = "fkInvoice", referencedColumnName = "invoicePk")
-    @Transient
-    private Invoice invoice;
-
-    @OneToOne
-    @JoinColumn(name = "fkTransactionType", referencedColumnName = "transactionTypePk")
+    private InvoiceDTO invoiceDTO;
     private TransactionType transactionType;
-
     private int transactionNumber;
-
     private String transactionDescription;
-
     private Double transactionAmount;
+
 
     public Long getId() {
         return id;
@@ -45,13 +29,12 @@ public class PaymentTransaction {
         this.vendor = vendor;
     }
 
-
-    public Invoice getInvoice() {
-        return invoice;
+    public InvoiceDTO getInvoiceDTO() {
+        return invoiceDTO;
     }
 
-    public void setInvoice(Invoice invoice) {
-        this.invoice = invoice;
+    public void setInvoiceDTO(InvoiceDTO invoiceDTO) {
+        this.invoiceDTO = invoiceDTO;
     }
 
     public TransactionType getTransactionType() {
