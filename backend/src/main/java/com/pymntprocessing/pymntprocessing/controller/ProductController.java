@@ -5,10 +5,13 @@ import com.pymntprocessing.pymntprocessing.constant.ApiConstants;
 import com.pymntprocessing.pymntprocessing.dto.ProductDTO;
 import com.pymntprocessing.pymntprocessing.entity.ResponseMessage;
 import com.pymntprocessing.pymntprocessing.service.ProductService;
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping(ApiConstants.V1.Product.PRODUCT_PATH)
@@ -34,5 +37,19 @@ public class ProductController {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(new ResponseMessage<>(null, false, "Product not found!"));
+    }
+    @GetMapping
+    public ResponseEntity<ResponseMessage<List<ProductDTO>>> getAllProduct() {
+        List<ProductDTO> productDTOS = this.productService.getAllProducts();
+
+        if (productDTOS.isEmpty()) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(new ResponseMessage<>(null, false, "Products not found"));
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ResponseMessage<>(productDTOS, true, ""));
     }
 }

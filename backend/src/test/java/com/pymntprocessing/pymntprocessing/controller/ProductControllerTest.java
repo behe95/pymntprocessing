@@ -1,5 +1,6 @@
 package com.pymntprocessing.pymntprocessing.controller;
 
+import com.jayway.jsonpath.JsonPath;
 import com.pymntprocessing.pymntprocessing.dto.PaymentTransactionDTO;
 import com.pymntprocessing.pymntprocessing.dto.ProductDTO;
 import com.pymntprocessing.pymntprocessing.entity.Product;
@@ -16,13 +17,18 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.BDDMockito.then;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -131,5 +137,106 @@ class ProductControllerTest {
         ArgumentCaptor<Long> productArgumentCaptorId = ArgumentCaptor.forClass(Long.class);
         then(this.productService).should(times(1)).getProductById(productArgumentCaptorId.capture());
         assertEquals(id, productArgumentCaptorId.getValue());
+    }
+
+    @Test
+    void getAllProductWhenExist() throws Exception {
+        // given
+        given(this.productService.getAllProducts()).willReturn(List.of(productDTO1, productDTO2));
+
+        // when
+        // then
+        MvcResult mvcResult =
+            this.mockMvc.perform(
+                    MockMvcRequestBuilders.get("/api/v1/product")
+                            .contentType(MediaType.APPLICATION_JSON)
+            ).andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data", hasSize(2)))
+            .andExpect(jsonPath("$.message").value(""))
+            .andExpect(jsonPath("$.success").value(true))
+            .andReturn();
+
+        String JSON = mvcResult.getResponse().getContentAsString();
+        List<Map<String, Object>> productsMap = JsonPath.parse(JSON).read("$.data");
+
+        for (Map<String, Object> product : productsMap) {
+            int id = Integer.parseInt(product.get("id").toString());
+            String productName = product.get("productName").toString();
+            String productDescription = product.get("productDescription").toString();
+
+            if (id == productDTO1.getId()) {
+                assertEquals(productName, productDTO1.getProductName());
+                assertEquals(productDescription, productDTO1.getProductDescription());
+                assertNull(product.get("paymentTransactionDTO"));
+            } else if (id == productDTO2.getId()) {
+                // check product
+                assertEquals(productName, productDTO2.getProductName());
+                assertEquals(productDescription, productDTO2.getProductDescription());
+
+                // test transaction
+                Map<String, Object> paymentTransactionDTOMap = JsonPath.parse(product.get("paymentTransactionDTO")).read("$");
+
+                int paymentTransactionId = Integer.parseInt(paymentTransactionDTOMap.get("id").toString());
+                int paymentTransactionNumber = Integer.parseInt(paymentTransactionDTOMap.get("transactionNumber").toString());
+                String paymentTransactionDescription = paymentTransactionDTOMap.get("transactionDescription").toString();
+                Double paymentTransactionAmount = Double.parseDouble(paymentTransactionDTOMap.get("transactionAmount").toString());
+
+                assertEquals(productDTO2.getPaymentTransactionDTO().getId(), paymentTransactionId);
+                assertEquals(productDTO2.getPaymentTransactionDTO().getTransactionNumber(), paymentTransactionNumber);
+                assertEquals(productDTO2.getPaymentTransactionDTO().getTransactionDescription(), paymentTransactionDescription);
+                assertEquals(productDTO2.getPaymentTransactionDTO().getTransactionAmount(), paymentTransactionAmount);
+
+                // test vendor
+                Map<String, Object> vendorMap = JsonPath.parse(paymentTransactionDTOMap.get("vendor")).read("$");
+
+                int vendorId = Integer.parseInt(vendorMap.get("id").toString());
+                String vendorName = vendorMap.get("name").toString();
+                String vendorAddress = vendorMap.get("address").toString();
+                String vendorEntityID = vendorMap.get("vendorId").toString();
+
+                assertEquals(productDTO2.getPaymentTransactionDTO().getVendor().getId(), vendorId);
+                assertEquals(productDTO2.getPaymentTransactionDTO().getVendor().getName(), vendorName);
+                assertEquals(productDTO2.getPaymentTransactionDTO().getVendor().getAddress(), vendorAddress);
+                assertEquals(productDTO2.getPaymentTransactionDTO().getVendor().getVendorId(), vendorEntityID);
+
+                // test transaction type
+                Map<String, Object> transactionTypeMap = JsonPath.parse(paymentTransactionDTOMap.get("transactionType")).read("$");
+
+                int transactionTypeId = Integer.parseInt(transactionTypeMap.get("id").toString());
+                String transactionTypeName = transactionTypeMap.get("name").toString();
+                int transactionTypeMultiplier = Integer.parseInt(transactionTypeMap.get("multiplier").toString());
+                int transactionTypeCode = Integer.parseInt(transactionTypeMap.get("code").toString());
+
+                assertEquals(productDTO2.getPaymentTransactionDTO().getTransactionType().getId(), transactionTypeId);
+                assertEquals(productDTO2.getPaymentTransactionDTO().getTransactionType().getName(), transactionTypeName);
+                assertEquals(productDTO2.getPaymentTransactionDTO().getTransactionType().getMultiplier(), transactionTypeMultiplier);
+                assertEquals(productDTO2.getPaymentTransactionDTO().getTransactionType().getCode(), transactionTypeCode);
+            }
+        }
+
+        verify(this.productService, times(1)).getAllProducts();
+    }
+
+    @Test
+    void getAllProductWhenNotExist() throws Exception {
+        // given
+        given(this.productService.getAllProducts()).willReturn(List.of());
+
+        // when
+        // then
+        MvcResult mvcResult =
+                this.mockMvc.perform(
+                                MockMvcRequestBuilders.get("/api/v1/product")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                        ).andDo(print())
+                        .andExpect(status().isNotFound())
+                        .andExpect(jsonPath("$.data").value(nullValue()))
+                        .andExpect(jsonPath("$.message").value("Products not found"))
+                        .andExpect(jsonPath("$.success").value(false))
+                        .andReturn();
+
+
+        verify(this.productService, times(1)).getAllProducts();
     }
 }
