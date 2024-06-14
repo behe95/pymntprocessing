@@ -1,11 +1,14 @@
 package com.pymntprocessing.pymntprocessing.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import com.pymntprocessing.pymntprocessing.dto.PaymentTransactionDTO;
 import com.pymntprocessing.pymntprocessing.dto.ProductDTO;
 import com.pymntprocessing.pymntprocessing.entity.Product;
+import com.pymntprocessing.pymntprocessing.entity.ResponseMessage;
 import com.pymntprocessing.pymntprocessing.entity.TransactionType;
 import com.pymntprocessing.pymntprocessing.entity.Vendor;
+import com.pymntprocessing.pymntprocessing.service.PaymentTransactionService;
 import com.pymntprocessing.pymntprocessing.service.ProductService;
 import com.sun.istack.NotNull;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,12 +16,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
@@ -37,17 +43,23 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ProductController.class)
+@AutoConfigureMockMvc
 class ProductControllerTest {
 
     @MockBean
     private ProductService productService;
 
+    @MockBean
+    private PaymentTransactionService paymentTransactionService;
+
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     ProductDTO productDTO1;
     ProductDTO productDTO2;
@@ -239,4 +251,228 @@ class ProductControllerTest {
 
         verify(this.productService, times(1)).getAllProducts();
     }
+
+    @Test
+    void createProductWhenPaymentTransactionNotExist() throws Exception {
+        ProductDTO newProductDTO = productDTO1;
+        newProductDTO.setId(null);
+        newProductDTO.setPaymentTransactionDTO(null);
+        String JSONRequestBody = this.objectMapper.writeValueAsString(newProductDTO);
+
+        ProductDTO returnProductDTO = new ProductDTO();
+        returnProductDTO.setId(1L);
+        returnProductDTO.setProductName(newProductDTO.getProductName());
+        returnProductDTO.setProductDescription(newProductDTO.getProductDescription());
+        returnProductDTO.setCreated(newProductDTO.getCreated());
+        returnProductDTO.setModified(newProductDTO.getModified());
+
+        String expectedReturnJSON = this.objectMapper.writeValueAsString(
+            new ResponseMessage<ProductDTO>(returnProductDTO, true, "Product created!")
+        );
+
+
+        // given
+        given(this.productService.createProduct(any(ProductDTO.class))).willReturn(returnProductDTO);
+
+        // when
+        // then
+        MvcResult mvcResult =
+                this.mockMvc.perform(
+                                MockMvcRequestBuilders.post("/api/v1/product")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(JSONRequestBody)
+                        ).andDo(print())
+                        .andExpect(status().isCreated())
+                        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(MockMvcResultMatchers.content().json(expectedReturnJSON))
+                        .andReturn();
+
+        verify(this.paymentTransactionService, times(0)).getPaymentTransactionById(any(Long.class));
+
+        ArgumentCaptor<ProductDTO> productDTOArgumentCaptor = ArgumentCaptor.forClass(ProductDTO.class);
+
+        verify(this.productService, times(1)).createProduct(productDTOArgumentCaptor.capture());
+
+        ProductDTO requestBodyProductDTO = productDTOArgumentCaptor.getValue();
+        assertEquals(newProductDTO.getPaymentTransactionDTO(), requestBodyProductDTO.getPaymentTransactionDTO());
+        assertEquals(newProductDTO.getProductName(), requestBodyProductDTO.getProductName());
+        assertEquals(newProductDTO.getProductDescription(), requestBodyProductDTO.getProductDescription());
+        assertEquals(newProductDTO.getId(), requestBodyProductDTO.getId());
+        assertEquals(newProductDTO.getCreated(), requestBodyProductDTO.getCreated());
+        assertEquals(newProductDTO.getModified(), requestBodyProductDTO.getModified());
+    }
+
+    @Test
+    void createProductWhenPaymentTransactionExistWithoutProductDTO() throws Exception {
+        ProductDTO newProductDTO = productDTO1;
+        newProductDTO.setId(null);
+
+        PaymentTransactionDTO paymentTransactionDTO = paymentTransactionDTO2;
+        paymentTransactionDTO.setId(1L);
+        paymentTransactionDTO.setProductDTO(null);
+
+        newProductDTO.setPaymentTransactionDTO(paymentTransactionDTO);
+
+
+
+        String JSONRequestBody = this.objectMapper.writeValueAsString(newProductDTO);
+
+        ProductDTO returnProductDTO = new ProductDTO();
+        returnProductDTO.setId(1L);
+        returnProductDTO.setProductName(newProductDTO.getProductName());
+        returnProductDTO.setProductDescription(newProductDTO.getProductDescription());
+        returnProductDTO.setCreated(newProductDTO.getCreated());
+        returnProductDTO.setModified(newProductDTO.getModified());
+
+        String expectedReturnJSON = this.objectMapper.writeValueAsString(
+                new ResponseMessage<ProductDTO>(returnProductDTO, true, "Product created!")
+        );
+
+
+
+        // given
+        given(this.paymentTransactionService.getPaymentTransactionById(paymentTransactionDTO.getId())).willReturn(paymentTransactionDTO);
+        given(this.productService.createProduct(any(ProductDTO.class))).willReturn(returnProductDTO);
+
+        // when
+        // then
+        MvcResult mvcResult =
+                this.mockMvc.perform(
+                                MockMvcRequestBuilders.post("/api/v1/product")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(JSONRequestBody)
+                        ).andDo(print())
+                        .andExpect(status().isCreated())
+                        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(MockMvcResultMatchers.content().json(expectedReturnJSON))
+                        .andReturn();
+
+        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(paymentTransactionDTO.getId());
+
+        ArgumentCaptor<ProductDTO> productDTOArgumentCaptor = ArgumentCaptor.forClass(ProductDTO.class);
+
+        verify(this.productService, times(1)).createProduct(productDTOArgumentCaptor.capture());
+
+        ProductDTO requestBodyProductDTO = productDTOArgumentCaptor.getValue();
+        assertEquals(newProductDTO.getProductName(), requestBodyProductDTO.getProductName());
+        assertEquals(newProductDTO.getProductDescription(), requestBodyProductDTO.getProductDescription());
+        assertEquals(newProductDTO.getId(), requestBodyProductDTO.getId());
+        assertEquals(newProductDTO.getCreated(), requestBodyProductDTO.getCreated());
+        assertEquals(newProductDTO.getModified(), requestBodyProductDTO.getModified());
+
+
+
+        assertEquals(newProductDTO.getPaymentTransactionDTO().getId(), requestBodyProductDTO.getPaymentTransactionDTO().getId());
+        assertEquals(newProductDTO.getPaymentTransactionDTO().getTransactionAmount(), requestBodyProductDTO.getPaymentTransactionDTO().getTransactionAmount());
+        assertEquals(newProductDTO.getPaymentTransactionDTO().getTransactionDescription(), requestBodyProductDTO.getPaymentTransactionDTO().getTransactionDescription());
+    }
+
+    @Test
+    void createProductWhenPaymentTransactionExistWithAlreadyExistingProductDTO() throws Exception {
+        ProductDTO newProductDTO = productDTO1;
+        newProductDTO.setId(null);
+
+        productDTO2.setPaymentTransactionDTO(null);
+        PaymentTransactionDTO paymentTransactionDTO = paymentTransactionDTO2;
+        paymentTransactionDTO.setId(1L);
+        paymentTransactionDTO.setProductDTO(productDTO2);
+
+        newProductDTO.setPaymentTransactionDTO(paymentTransactionDTO);
+
+
+
+        String JSONRequestBody = this.objectMapper.writeValueAsString(newProductDTO);
+
+        // given
+        given(this.paymentTransactionService.getPaymentTransactionById(paymentTransactionDTO.getId())).willReturn(paymentTransactionDTO);
+        given(this.productService.createProduct(any(ProductDTO.class))).willReturn(null);
+
+        // when
+        // then
+        MvcResult mvcResult =
+                this.mockMvc.perform(
+                                MockMvcRequestBuilders.post("/api/v1/product")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(JSONRequestBody)
+                        ).andDo(print())
+                        .andExpect(status().isBadRequest())
+                        .andExpect(jsonPath("$.message").value(
+                                "Unable to assign payment transaction " + paymentTransactionDTO.getTransactionNumber() + " to Product " + newProductDTO.getProductName()
+                        ))
+                        .andExpect(jsonPath("$.success").value(false))
+                        .andReturn();
+
+        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(paymentTransactionDTO.getId());
+
+
+        verify(this.productService, times(0)).createProduct(any(ProductDTO.class));
+
+    }
+
+    @Test
+    void createProductWhenPaymentTransactionWihtDuplicateEntryException() throws Exception {
+        ProductDTO newProductDTO = productDTO1;
+        newProductDTO.setId(null);
+        newProductDTO.setPaymentTransactionDTO(null);
+
+
+
+        String JSONRequestBody = this.objectMapper.writeValueAsString(newProductDTO);
+
+        // given
+        given(this.productService.createProduct(any(ProductDTO.class))).willThrow(new DataIntegrityViolationException("ERROR: Duplicate entry!"));
+
+        // when
+        // then
+        MvcResult mvcResult =
+                this.mockMvc.perform(
+                                MockMvcRequestBuilders.post("/api/v1/product")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(JSONRequestBody)
+                        ).andDo(print())
+                        .andExpect(status().isBadRequest())
+                        .andExpect(jsonPath("$.message").value("ERROR: Duplicate entry!"))
+                        .andExpect(jsonPath("$.success").value(false))
+                        .andReturn();
+
+        verify(this.productService, times(1)).createProduct(any(ProductDTO.class));
+
+    }
+
+    @Test
+    void createProductWhenPaymentTransactionWihtInternalServerErrorException() throws Exception {
+        ProductDTO newProductDTO = productDTO1;
+        newProductDTO.setId(null);
+        newProductDTO.setPaymentTransactionDTO(null);
+
+
+
+        String JSONRequestBody = this.objectMapper.writeValueAsString(newProductDTO);
+
+
+
+        String expectedReturnJSON = this.objectMapper.writeValueAsString(
+                new ResponseMessage<ProductDTO>(null, false, "ERROR: Internal Server Error! Additional error message")
+        );
+
+        // given
+        given(this.productService.createProduct(any(ProductDTO.class))).willThrow(new RuntimeException("Additional error message"));
+
+        // when
+        // then
+        MvcResult mvcResult =
+                this.mockMvc.perform(
+                                MockMvcRequestBuilders.post("/api/v1/product")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(JSONRequestBody)
+                        ).andDo(print())
+                        .andExpect(status().isInternalServerError())
+                        .andExpect(content().json(expectedReturnJSON))
+                        .andReturn();
+
+        verify(this.productService, times(1)).createProduct(any(ProductDTO.class));
+
+    }
+
+
 }

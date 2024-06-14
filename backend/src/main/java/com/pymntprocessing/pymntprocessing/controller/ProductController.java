@@ -2,16 +2,22 @@ package com.pymntprocessing.pymntprocessing.controller;
 
 
 import com.pymntprocessing.pymntprocessing.constant.ApiConstants;
+import com.pymntprocessing.pymntprocessing.constant.db.TransactionTypeValue;
+import com.pymntprocessing.pymntprocessing.dto.PaymentTransactionDTO;
 import com.pymntprocessing.pymntprocessing.dto.ProductDTO;
 import com.pymntprocessing.pymntprocessing.entity.ResponseMessage;
+import com.pymntprocessing.pymntprocessing.entity.TransactionType;
+import com.pymntprocessing.pymntprocessing.entity.Vendor;
+import com.pymntprocessing.pymntprocessing.service.PaymentTransactionService;
 import com.pymntprocessing.pymntprocessing.service.ProductService;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping(ApiConstants.V1.Product.PRODUCT_PATH)
@@ -19,9 +25,12 @@ import java.util.List;
 public class ProductController {
     private final ProductService productService;
 
+    private final PaymentTransactionService paymentTransactionService;
+
     @Autowired
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, PaymentTransactionService paymentTransactionService) {
         this.productService = productService;
+        this.paymentTransactionService = paymentTransactionService;
     }
 
     @GetMapping("/{id}")
@@ -52,4 +61,51 @@ public class ProductController {
                 .status(HttpStatus.OK)
                 .body(new ResponseMessage<>(productDTOS, true, ""));
     }
+
+    @PostMapping
+    public ResponseEntity<ResponseMessage<ProductDTO>> createProduct(@RequestBody ProductDTO productDTO) {
+        PaymentTransactionDTO paymentTransactionDTO = productDTO.getPaymentTransactionDTO();
+
+        String errorMessage = "";
+        /**
+         * validate data
+         */
+        if (paymentTransactionDTO != null && paymentTransactionDTO.getId() != null) {
+
+            PaymentTransactionDTO existingPaymentTransaction = this.paymentTransactionService.getPaymentTransactionById(paymentTransactionDTO.getId());
+
+            if (existingPaymentTransaction.getProductDTO() != null) {
+                errorMessage = "Unable to assign payment transaction " + existingPaymentTransaction.getTransactionNumber() + " to Product " + productDTO.getProductName();
+
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(new ResponseMessage<>(null, false, errorMessage));
+            }
+        }
+
+        try {
+            ProductDTO newProductDTO = this.productService.createProduct(productDTO);
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(new ResponseMessage<ProductDTO>(newProductDTO, true, "Product created!"));
+        } catch (DataIntegrityViolationException e) {
+            errorMessage = "ERROR: Duplicate entry!";
+            if (e.getRootCause() != null) {
+                errorMessage = e.getRootCause().getMessage();
+            }
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseMessage<>(null, false, errorMessage));
+        } catch (Exception ex) {
+            errorMessage = "ERROR: Internal Server Error! " + ex.getMessage();
+
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseMessage<>(null, false, errorMessage));
+        }
+
+    }
+
+
 }
+

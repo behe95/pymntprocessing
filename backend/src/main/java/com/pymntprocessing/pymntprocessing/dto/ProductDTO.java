@@ -65,4 +65,5 @@ public class ProductDTO {
     public void setModified(LocalDateTime modified) {
         this.modified = modified;
     }
+
 }
