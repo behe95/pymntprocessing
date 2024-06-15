@@ -20,6 +20,7 @@ public class ProductConverter {
     public ProductDTO toDTO(Product product) {
         ProductDTO productDTO = null;
         if (product != null) {
+
             productDTO = this.modelMapper.map(product, ProductDTO.class);
 
             if (product.getPaymentTransaction() != null) {

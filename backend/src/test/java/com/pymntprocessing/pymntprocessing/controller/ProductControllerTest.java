@@ -1,13 +1,11 @@
 package com.pymntprocessing.pymntprocessing.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import com.pymntprocessing.pymntprocessing.dto.PaymentTransactionDTO;
 import com.pymntprocessing.pymntprocessing.dto.ProductDTO;
-import com.pymntprocessing.pymntprocessing.entity.Product;
-import com.pymntprocessing.pymntprocessing.entity.ResponseMessage;
-import com.pymntprocessing.pymntprocessing.entity.TransactionType;
-import com.pymntprocessing.pymntprocessing.entity.Vendor;
+import com.pymntprocessing.pymntprocessing.entity.*;
 import com.pymntprocessing.pymntprocessing.service.PaymentTransactionService;
 import com.pymntprocessing.pymntprocessing.service.ProductService;
 import com.sun.istack.NotNull;
@@ -21,6 +19,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -475,4 +474,334 @@ class ProductControllerTest {
     }
 
 
+    @Test
+    void updateProductWithNoIdProvided() throws Exception {
+        productDTO1.setId(null);
+
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponseMessage<>(null, false, "Product id not provided!"));
+        String requestBody = this.objectMapper.writeValueAsString(productDTO1);
+
+        // when
+        // then
+        this.mockMvc.perform(
+                MockMvcRequestBuilders.put("/api/v1/product/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+        ).andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
+        verify(this.productService, times(0)).getProductById(any(Long.class));
+        verify(this.paymentTransactionService, times(0)).getPaymentTransactionById(any(Long.class));
+        verify(this.productService, times(0)).updateProduct(any(Long.class), any(ProductDTO.class));
+    }
+
+
+    @Test
+    void updateProductWhenProductNotExist() throws Exception {
+        productDTO1.setId(1L);
+
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponseMessage<>(null, false, "Product doesn't exist!"));
+        String requestBody = this.objectMapper.writeValueAsString(productDTO1);
+
+        // given
+        given(this.productService.getProductById(any(Long.class))).willReturn(null);
+
+        // when
+        // then
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/product/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody)
+                ).andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
+        verify(this.productService, times(1)).getProductById(any(Long.class));
+        verify(this.paymentTransactionService, times(0)).getPaymentTransactionById(any(Long.class));
+        verify(this.productService, times(0)).updateProduct(any(Long.class), any(ProductDTO.class));
+    }
+
+
+    @Test
+    void updateProductWhenPaymentTransactionAssignedAlreadyHasProductTied() throws Exception {
+        productDTO1.setId(1L);
+        paymentTransactionDTO2.setId(1L);
+        productDTO2.setPaymentTransactionDTO(null);
+        paymentTransactionDTO2.setProductDTO(productDTO2);
+        productDTO1.setPaymentTransactionDTO(paymentTransactionDTO2);
+
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponseMessage<>(null, false,
+                "Unable to assign payment transaction " + paymentTransactionDTO2.getTransactionNumber() + " to Product " + productDTO1.getProductName()));
+        String requestBody = this.objectMapper.writeValueAsString(productDTO1);
+
+
+        ProductDTO existingProductDTO = new ProductDTO();
+        existingProductDTO.setId(1L);
+        existingProductDTO.setProductName(productDTO1.getProductName());
+        existingProductDTO.setProductDescription(productDTO1.getProductDescription());
+        existingProductDTO.setCreated(productDTO1.getCreated());
+        existingProductDTO.setModified(productDTO1.getModified());
+
+        PaymentTransactionDTO existingPaymentTransactionDTO = new PaymentTransactionDTO();
+        existingPaymentTransactionDTO.setId(1L);
+        existingPaymentTransactionDTO.setProductDTO(paymentTransactionDTO2.getProductDTO());
+        existingPaymentTransactionDTO.setInvoiceDTO(paymentTransactionDTO2.getInvoiceDTO());
+        existingPaymentTransactionDTO.setTransactionAmount(paymentTransactionDTO2.getTransactionAmount());
+        existingPaymentTransactionDTO.setTransactionType(paymentTransactionDTO2.getTransactionType());
+        existingPaymentTransactionDTO.setTransactionDescription(paymentTransactionDTO2.getTransactionDescription());
+        existingPaymentTransactionDTO.setTransactionNumber(paymentTransactionDTO2.getTransactionNumber());
+        existingPaymentTransactionDTO.setVendor(paymentTransactionDTO2.getVendor());
+
+        // given
+        given(this.productService.getProductById(any(Long.class))).willReturn(existingProductDTO);
+        given(this.paymentTransactionService.getPaymentTransactionById(any(Long.class))).willReturn(existingPaymentTransactionDTO);
+
+        // when
+        // then
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/product/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody)
+                ).andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
+        verify(this.productService, times(1)).getProductById(any(Long.class));
+        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(any(Long.class));
+        verify(this.productService, times(0)).updateProduct(any(Long.class), any(ProductDTO.class));
+    }
+
+
+    @Test
+    void updateProduct() throws Exception {
+        productDTO1.setId(1L);
+        paymentTransactionDTO2.setId(1L);
+        productDTO2.setPaymentTransactionDTO(null);
+        paymentTransactionDTO2.setProductDTO(null);
+        productDTO1.setPaymentTransactionDTO(paymentTransactionDTO2);
+
+
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponseMessage<>(productDTO1, true,"Product updated!"));
+        String requestBody = this.objectMapper.writeValueAsString(productDTO1);
+
+
+        ProductDTO existingProductDTO = new ProductDTO();
+        existingProductDTO.setId(1L);
+        existingProductDTO.setProductName(productDTO1.getProductName());
+        existingProductDTO.setProductDescription(productDTO1.getProductDescription());
+        existingProductDTO.setCreated(productDTO1.getCreated());
+        existingProductDTO.setModified(productDTO1.getModified());
+
+        PaymentTransactionDTO existingPaymentTransactionDTO = new PaymentTransactionDTO();
+        existingPaymentTransactionDTO.setId(1L);
+        existingPaymentTransactionDTO.setProductDTO(paymentTransactionDTO2.getProductDTO());
+        existingPaymentTransactionDTO.setInvoiceDTO(paymentTransactionDTO2.getInvoiceDTO());
+        existingPaymentTransactionDTO.setTransactionAmount(paymentTransactionDTO2.getTransactionAmount());
+        existingPaymentTransactionDTO.setTransactionType(paymentTransactionDTO2.getTransactionType());
+        existingPaymentTransactionDTO.setTransactionDescription(paymentTransactionDTO2.getTransactionDescription());
+        existingPaymentTransactionDTO.setTransactionNumber(paymentTransactionDTO2.getTransactionNumber());
+        existingPaymentTransactionDTO.setVendor(paymentTransactionDTO2.getVendor());
+
+        // given
+        given(this.productService.getProductById(any(Long.class))).willReturn(existingProductDTO);
+        given(this.paymentTransactionService.getPaymentTransactionById(any(Long.class))).willReturn(existingPaymentTransactionDTO);
+        given(this.productService.updateProduct(any(Long.class), any(ProductDTO.class))).willReturn(productDTO1);
+
+        // when
+        // then
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/product/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody)
+                ).andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
+
+        verify(this.productService, times(1)).getProductById(any(Long.class));
+        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(any(Long.class));
+        verify(this.productService, times(1)).updateProduct(any(Long.class), any(ProductDTO.class));
+    }
+
+
+    @Test
+    void updateProductWithDataIntegrityViolationException() throws Exception {
+        productDTO1.setId(1L);
+        paymentTransactionDTO2.setId(1L);
+        productDTO2.setPaymentTransactionDTO(null);
+        paymentTransactionDTO2.setProductDTO(null);
+        productDTO1.setPaymentTransactionDTO(paymentTransactionDTO2);
+
+
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponseMessage<>(null, false,"ERROR: Duplicate entry!"));
+        String requestBody = this.objectMapper.writeValueAsString(productDTO1);
+
+
+        ProductDTO existingProductDTO = new ProductDTO();
+        existingProductDTO.setId(1L);
+        existingProductDTO.setProductName(productDTO1.getProductName());
+        existingProductDTO.setProductDescription(productDTO1.getProductDescription());
+        existingProductDTO.setCreated(productDTO1.getCreated());
+        existingProductDTO.setModified(productDTO1.getModified());
+
+        PaymentTransactionDTO existingPaymentTransactionDTO = new PaymentTransactionDTO();
+        existingPaymentTransactionDTO.setId(1L);
+        existingPaymentTransactionDTO.setProductDTO(paymentTransactionDTO2.getProductDTO());
+        existingPaymentTransactionDTO.setInvoiceDTO(paymentTransactionDTO2.getInvoiceDTO());
+        existingPaymentTransactionDTO.setTransactionAmount(paymentTransactionDTO2.getTransactionAmount());
+        existingPaymentTransactionDTO.setTransactionType(paymentTransactionDTO2.getTransactionType());
+        existingPaymentTransactionDTO.setTransactionDescription(paymentTransactionDTO2.getTransactionDescription());
+        existingPaymentTransactionDTO.setTransactionNumber(paymentTransactionDTO2.getTransactionNumber());
+        existingPaymentTransactionDTO.setVendor(paymentTransactionDTO2.getVendor());
+
+        // given
+        given(this.productService.getProductById(any(Long.class))).willReturn(existingProductDTO);
+        given(this.paymentTransactionService.getPaymentTransactionById(any(Long.class))).willReturn(existingPaymentTransactionDTO);
+        given(this.productService.updateProduct(any(Long.class), any(ProductDTO.class))).willThrow(new DataIntegrityViolationException(""));
+
+        // when
+        // then
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/product/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody)
+                ).andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
+
+        verify(this.productService, times(1)).getProductById(any(Long.class));
+        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(any(Long.class));
+        verify(this.productService, times(1)).updateProduct(any(Long.class), any(ProductDTO.class));
+    }
+
+
+    @Test
+    void updateProductWithInternalServerException() throws Exception {
+        productDTO1.setId(1L);
+        paymentTransactionDTO2.setId(1L);
+        productDTO2.setPaymentTransactionDTO(null);
+        paymentTransactionDTO2.setProductDTO(null);
+        productDTO1.setPaymentTransactionDTO(paymentTransactionDTO2);
+
+
+        String expectedReturnJSON = this.objectMapper.writeValueAsString(
+                new ResponseMessage<ProductDTO>(null, false, "ERROR: Internal Server Error! Additional error message")
+        );
+        String requestBody = this.objectMapper.writeValueAsString(productDTO1);
+
+
+        ProductDTO existingProductDTO = new ProductDTO();
+        existingProductDTO.setId(1L);
+        existingProductDTO.setProductName(productDTO1.getProductName());
+        existingProductDTO.setProductDescription(productDTO1.getProductDescription());
+        existingProductDTO.setCreated(productDTO1.getCreated());
+        existingProductDTO.setModified(productDTO1.getModified());
+
+        PaymentTransactionDTO existingPaymentTransactionDTO = new PaymentTransactionDTO();
+        existingPaymentTransactionDTO.setId(1L);
+        existingPaymentTransactionDTO.setProductDTO(paymentTransactionDTO2.getProductDTO());
+        existingPaymentTransactionDTO.setInvoiceDTO(paymentTransactionDTO2.getInvoiceDTO());
+        existingPaymentTransactionDTO.setTransactionAmount(paymentTransactionDTO2.getTransactionAmount());
+        existingPaymentTransactionDTO.setTransactionType(paymentTransactionDTO2.getTransactionType());
+        existingPaymentTransactionDTO.setTransactionDescription(paymentTransactionDTO2.getTransactionDescription());
+        existingPaymentTransactionDTO.setTransactionNumber(paymentTransactionDTO2.getTransactionNumber());
+        existingPaymentTransactionDTO.setVendor(paymentTransactionDTO2.getVendor());
+
+        // given
+        given(this.productService.getProductById(any(Long.class))).willReturn(existingProductDTO);
+        given(this.paymentTransactionService.getPaymentTransactionById(any(Long.class))).willReturn(existingPaymentTransactionDTO);
+        given(this.productService.updateProduct(any(Long.class), any(ProductDTO.class))).willThrow(new RuntimeException("Additional error message"));
+
+        // when
+        // then
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/product/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody)
+                ).andExpect(status().isInternalServerError())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
+
+        verify(this.productService, times(1)).getProductById(any(Long.class));
+        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(any(Long.class));
+        verify(this.productService, times(1)).updateProduct(any(Long.class), any(ProductDTO.class));
+    }
+
+    @Test
+    void deletePaymentTransactionWithProductExist() throws Exception {
+
+        productDTO1.setId(1L);
+        paymentTransactionDTO2.setId(1L);
+        productDTO2.setPaymentTransactionDTO(null);
+        paymentTransactionDTO2.setProductDTO(null);
+        productDTO1.setPaymentTransactionDTO(paymentTransactionDTO2);
+
+
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponseMessage<>(null, false,"Product doesn't exist!"));
+
+
+        // given
+        given(this.productService.getProductById(any(Long.class))).willReturn(null);
+
+        // when
+        // then
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.delete("/api/v1/product/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
+
+        verify(this.productService, times(1)).getProductById(any(Long.class));
+        verify(this.paymentTransactionService, times(0)).getPaymentTransactionById(any(Long.class));
+        verify(this.productService, times(0)).deleteProduct(any(Long.class));
+    }
+
+    @Test
+    void deleteProduct() throws Exception {
+
+
+        productDTO1.setId(1L);
+        paymentTransactionDTO2.setId(1L);
+        productDTO2.setPaymentTransactionDTO(null);
+        paymentTransactionDTO2.setProductDTO(null);
+        productDTO1.setPaymentTransactionDTO(paymentTransactionDTO2);
+
+
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponseMessage<>(null, true,"Product " + productDTO1.getProductName() + " has been deleted"));
+
+        ProductDTO existingProductDTO = new ProductDTO();
+        existingProductDTO.setId(1L);
+        existingProductDTO.setProductName(productDTO1.getProductName());
+        existingProductDTO.setProductDescription(productDTO1.getProductDescription());
+        existingProductDTO.setPaymentTransactionDTO(productDTO1.getPaymentTransactionDTO());
+        existingProductDTO.setCreated(productDTO1.getCreated());
+        existingProductDTO.setModified(productDTO1.getModified());
+
+        PaymentTransactionDTO existingPaymentTransactionDTO = new PaymentTransactionDTO();
+        existingPaymentTransactionDTO.setId(1L);
+        existingPaymentTransactionDTO.setProductDTO(paymentTransactionDTO2.getProductDTO());
+        existingPaymentTransactionDTO.setInvoiceDTO(paymentTransactionDTO2.getInvoiceDTO());
+        existingPaymentTransactionDTO.setTransactionAmount(paymentTransactionDTO2.getTransactionAmount());
+        existingPaymentTransactionDTO.setTransactionType(paymentTransactionDTO2.getTransactionType());
+        existingPaymentTransactionDTO.setTransactionDescription(paymentTransactionDTO2.getTransactionDescription());
+        existingPaymentTransactionDTO.setTransactionNumber(paymentTransactionDTO2.getTransactionNumber());
+        existingPaymentTransactionDTO.setVendor(paymentTransactionDTO2.getVendor());
+        existingPaymentTransactionDTO.setVendor(paymentTransactionDTO2.getVendor());
+
+        // given
+        given(this.productService.getProductById(any(Long.class))).willReturn(existingProductDTO);
+        given(this.paymentTransactionService.getPaymentTransactionById(any(Long.class))).willReturn(existingPaymentTransactionDTO);
+
+        // when
+        // then
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.delete("/api/v1/product/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
+
+        verify(this.productService, times(1)).getProductById(any(Long.class));
+        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(any(Long.class));
+        verify(this.paymentTransactionService, times(1)).updatePaymentTransaction(any(Long.class), any(PaymentTransactionDTO.class));
+        verify(this.productService, times(1)).deleteProduct(any(Long.class));
+    }
 }
