@@ -2,6 +2,9 @@ package com.pymntprocessing.pymntprocessing.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
+import com.pymntprocessing.pymntprocessing.exception.GlobalErrorException;
+import com.pymntprocessing.pymntprocessing.exception.ProductAssignedWithInvalidPaymentTransactionException;
+import com.pymntprocessing.pymntprocessing.exception.ProductNotFoundException;
 import com.pymntprocessing.pymntprocessing.model.dto.PaymentTransactionDTO;
 import com.pymntprocessing.pymntprocessing.model.dto.ProductDTO;
 import com.pymntprocessing.pymntprocessing.model.entity.ResponsePayload;
@@ -127,7 +130,11 @@ class ProductControllerTest {
     void getProductByIdWhenNotExist() throws Exception {
         Long id = 1L;
         // given
-        given(this.productService.getProductById(id)).willReturn(null);
+        given(this.productService.getProductById(any(Long.class))).willThrow(new ProductNotFoundException());
+
+        String expectedReturnJSON = this.objectMapper.writeValueAsString(
+                new ResponsePayload<GlobalErrorException>(new ProductNotFoundException(), false, "Product doesn't exist!")
+        );
 
         // when
         // then
@@ -136,9 +143,8 @@ class ProductControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                 ).andDo(print())
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.payload").value(nullValue()))
-                .andExpect(jsonPath("$.message").value("Product not found!"))
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
         ArgumentCaptor<Long> productArgumentCaptorId = ArgumentCaptor.forClass(Long.class);
         then(this.productService).should(times(1)).getProductById(productArgumentCaptorId.capture());
@@ -150,6 +156,10 @@ class ProductControllerTest {
         // given
         given(this.productService.getAllProducts()).willReturn(List.of(productDTO1, productDTO2));
 
+        String expectedReturnJSON = this.objectMapper.writeValueAsString(
+                new ResponsePayload<>(List.of(productDTO1, productDTO2), true, "")
+        );
+
         // when
         // then
         MvcResult mvcResult =
@@ -158,68 +168,9 @@ class ProductControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
             ).andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.payload", hasSize(2)))
-            .andExpect(jsonPath("$.message").value(""))
-            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(expectedReturnJSON))
             .andReturn();
-
-        String JSON = mvcResult.getResponse().getContentAsString();
-        List<Map<String, Object>> productsMap = JsonPath.parse(JSON).read("$.payload");
-
-        for (Map<String, Object> product : productsMap) {
-            int id = Integer.parseInt(product.get("id").toString());
-            String productName = product.get("productName").toString();
-            String productDescription = product.get("productDescription").toString();
-
-            if (id == productDTO1.getId()) {
-                assertEquals(productName, productDTO1.getProductName());
-                assertEquals(productDescription, productDTO1.getProductDescription());
-                assertNull(product.get("paymentTransactionDTO"));
-            } else if (id == productDTO2.getId()) {
-                // check product
-                assertEquals(productName, productDTO2.getProductName());
-                assertEquals(productDescription, productDTO2.getProductDescription());
-
-                // test transaction
-                Map<String, Object> paymentTransactionDTOMap = JsonPath.parse(product.get("paymentTransactionDTO")).read("$");
-
-                int paymentTransactionId = Integer.parseInt(paymentTransactionDTOMap.get("id").toString());
-                int paymentTransactionNumber = Integer.parseInt(paymentTransactionDTOMap.get("transactionNumber").toString());
-                String paymentTransactionDescription = paymentTransactionDTOMap.get("transactionDescription").toString();
-                Double paymentTransactionAmount = Double.parseDouble(paymentTransactionDTOMap.get("transactionAmount").toString());
-
-                assertEquals(productDTO2.getPaymentTransactionDTO().getId(), paymentTransactionId);
-                assertEquals(productDTO2.getPaymentTransactionDTO().getTransactionNumber(), paymentTransactionNumber);
-                assertEquals(productDTO2.getPaymentTransactionDTO().getTransactionDescription(), paymentTransactionDescription);
-                assertEquals(productDTO2.getPaymentTransactionDTO().getTransactionAmount(), paymentTransactionAmount);
-
-                // test vendor
-                Map<String, Object> vendorMap = JsonPath.parse(paymentTransactionDTOMap.get("vendor")).read("$");
-
-                int vendorId = Integer.parseInt(vendorMap.get("id").toString());
-                String vendorName = vendorMap.get("name").toString();
-                String vendorAddress = vendorMap.get("address").toString();
-                String vendorEntityID = vendorMap.get("vendorId").toString();
-
-                assertEquals(productDTO2.getPaymentTransactionDTO().getVendor().getId(), vendorId);
-                assertEquals(productDTO2.getPaymentTransactionDTO().getVendor().getName(), vendorName);
-                assertEquals(productDTO2.getPaymentTransactionDTO().getVendor().getAddress(), vendorAddress);
-                assertEquals(productDTO2.getPaymentTransactionDTO().getVendor().getVendorId(), vendorEntityID);
-
-                // test transaction type
-                Map<String, Object> transactionTypeMap = JsonPath.parse(paymentTransactionDTOMap.get("transactionType")).read("$");
-
-                int transactionTypeId = Integer.parseInt(transactionTypeMap.get("id").toString());
-                String transactionTypeName = transactionTypeMap.get("name").toString();
-                int transactionTypeMultiplier = Integer.parseInt(transactionTypeMap.get("multiplier").toString());
-                int transactionTypeCode = Integer.parseInt(transactionTypeMap.get("code").toString());
-
-                assertEquals(productDTO2.getPaymentTransactionDTO().getTransactionType().getId(), transactionTypeId);
-                assertEquals(productDTO2.getPaymentTransactionDTO().getTransactionType().getName(), transactionTypeName);
-                assertEquals(productDTO2.getPaymentTransactionDTO().getTransactionType().getMultiplier(), transactionTypeMultiplier);
-                assertEquals(productDTO2.getPaymentTransactionDTO().getTransactionType().getCode(), transactionTypeCode);
-            }
-        }
 
         verify(this.productService, times(1)).getAllProducts();
     }
@@ -229,6 +180,10 @@ class ProductControllerTest {
         // given
         given(this.productService.getAllProducts()).willReturn(List.of());
 
+
+        String expectedReturnJSON = this.objectMapper.writeValueAsString(
+                new ResponsePayload<>(List.of(), true, "")
+        );
         // when
         // then
         MvcResult mvcResult =
@@ -236,10 +191,10 @@ class ProductControllerTest {
                                 MockMvcRequestBuilders.get("/api/v1/product")
                                         .contentType(MediaType.APPLICATION_JSON)
                         ).andDo(print())
-                        .andExpect(status().isNotFound())
-                        .andExpect(jsonPath("$.payload").value(nullValue()))
-                        .andExpect(jsonPath("$.message").value("Products not found"))
-                        .andExpect(jsonPath("$.success").value(false))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(jsonPath("$.payload", hasSize(0)))
+                        .andExpect(content().json(expectedReturnJSON))
                         .andReturn();
 
 
@@ -325,7 +280,6 @@ class ProductControllerTest {
 
 
         // given
-        given(this.paymentTransactionService.getPaymentTransactionById(paymentTransactionDTO.getId())).willReturn(paymentTransactionDTO);
         given(this.productService.createProduct(any(ProductDTO.class))).willReturn(returnProductDTO);
 
         // when
@@ -341,7 +295,6 @@ class ProductControllerTest {
                         .andExpect(MockMvcResultMatchers.content().json(expectedReturnJSON))
                         .andReturn();
 
-        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(paymentTransactionDTO.getId());
 
         ArgumentCaptor<ProductDTO> productDTOArgumentCaptor = ArgumentCaptor.forClass(ProductDTO.class);
 
@@ -357,7 +310,6 @@ class ProductControllerTest {
 
 
         assertEquals(newProductDTO.getPaymentTransactionDTO().getId(), requestBodyProductDTO.getPaymentTransactionDTO().getId());
-        assertEquals(newProductDTO.getPaymentTransactionDTO().getTransactionAmount(), requestBodyProductDTO.getPaymentTransactionDTO().getTransactionAmount());
         assertEquals(newProductDTO.getPaymentTransactionDTO().getTransactionDescription(), requestBodyProductDTO.getPaymentTransactionDTO().getTransactionDescription());
     }
 
@@ -373,13 +325,10 @@ class ProductControllerTest {
 
         newProductDTO.setPaymentTransactionDTO(paymentTransactionDTO);
 
-
-
         String JSONRequestBody = this.objectMapper.writeValueAsString(newProductDTO);
 
         // given
-        given(this.paymentTransactionService.getPaymentTransactionById(paymentTransactionDTO.getId())).willReturn(paymentTransactionDTO);
-        given(this.productService.createProduct(any(ProductDTO.class))).willReturn(null);
+        given(this.productService.createProduct(any(ProductDTO.class))).willThrow(new ProductAssignedWithInvalidPaymentTransactionException());
 
         // when
         // then
@@ -390,16 +339,11 @@ class ProductControllerTest {
                                         .content(JSONRequestBody)
                         ).andDo(print())
                         .andExpect(status().isBadRequest())
-                        .andExpect(jsonPath("$.message").value(
-                                "Unable to assign payment transaction " + paymentTransactionDTO.getTransactionNumber() + " to Product " + newProductDTO.getProductName()
-                        ))
+                        .andExpect(jsonPath("$.message").value("Unable to assign payment transaction to product"))
                         .andExpect(jsonPath("$.success").value(false))
                         .andReturn();
 
-        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(paymentTransactionDTO.getId());
-
-
-        verify(this.productService, times(0)).createProduct(any(ProductDTO.class));
+        verify(this.productService, times(1)).createProduct(any(ProductDTO.class));
 
     }
 
@@ -446,7 +390,7 @@ class ProductControllerTest {
 
 
         String expectedReturnJSON = this.objectMapper.writeValueAsString(
-                new ResponsePayload<ProductDTO>(null, false, "ERROR: Internal Server Error! Additional error message")
+                new ResponsePayload<ProductDTO>(null, false, "Something went wrong! Additional error message")
         );
 
         // given
@@ -524,8 +468,8 @@ class ProductControllerTest {
         paymentTransactionDTO2.setProductDTO(productDTO2);
         productDTO1.setPaymentTransactionDTO(paymentTransactionDTO2);
 
-        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(null, false,
-                "Unable to assign payment transaction " + paymentTransactionDTO2.getTransactionNumber() + " to Product " + productDTO1.getProductName()));
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(new ProductAssignedWithInvalidPaymentTransactionException(), false,
+                "Unable to assign payment transaction to product"));
         String requestBody = this.objectMapper.writeValueAsString(productDTO1);
 
 
@@ -536,19 +480,9 @@ class ProductControllerTest {
         existingProductDTO.setCreated(productDTO1.getCreated());
         existingProductDTO.setModified(productDTO1.getModified());
 
-        PaymentTransactionDTO existingPaymentTransactionDTO = new PaymentTransactionDTO();
-        existingPaymentTransactionDTO.setId(1L);
-        existingPaymentTransactionDTO.setProductDTO(paymentTransactionDTO2.getProductDTO());
-        existingPaymentTransactionDTO.setInvoiceDTO(paymentTransactionDTO2.getInvoiceDTO());
-        existingPaymentTransactionDTO.setTransactionAmount(paymentTransactionDTO2.getTransactionAmount());
-        existingPaymentTransactionDTO.setTransactionType(paymentTransactionDTO2.getTransactionType());
-        existingPaymentTransactionDTO.setTransactionDescription(paymentTransactionDTO2.getTransactionDescription());
-        existingPaymentTransactionDTO.setTransactionNumber(paymentTransactionDTO2.getTransactionNumber());
-        existingPaymentTransactionDTO.setVendor(paymentTransactionDTO2.getVendor());
-
         // given
         given(this.productService.getProductById(any(Long.class))).willReturn(existingProductDTO);
-        given(this.paymentTransactionService.getPaymentTransactionById(any(Long.class))).willReturn(existingPaymentTransactionDTO);
+        given(this.productService.updateProduct(any(Long.class), any(ProductDTO.class))).willThrow(new ProductAssignedWithInvalidPaymentTransactionException());
 
         // when
         // then
@@ -560,8 +494,7 @@ class ProductControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().json(expectedResponseJSON));
         verify(this.productService, times(1)).getProductById(any(Long.class));
-        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(any(Long.class));
-        verify(this.productService, times(0)).updateProduct(any(Long.class), any(ProductDTO.class));
+        verify(this.productService, times(1)).updateProduct(any(Long.class), any(ProductDTO.class));
     }
 
 
@@ -585,19 +518,8 @@ class ProductControllerTest {
         existingProductDTO.setCreated(productDTO1.getCreated());
         existingProductDTO.setModified(productDTO1.getModified());
 
-        PaymentTransactionDTO existingPaymentTransactionDTO = new PaymentTransactionDTO();
-        existingPaymentTransactionDTO.setId(1L);
-        existingPaymentTransactionDTO.setProductDTO(paymentTransactionDTO2.getProductDTO());
-        existingPaymentTransactionDTO.setInvoiceDTO(paymentTransactionDTO2.getInvoiceDTO());
-        existingPaymentTransactionDTO.setTransactionAmount(paymentTransactionDTO2.getTransactionAmount());
-        existingPaymentTransactionDTO.setTransactionType(paymentTransactionDTO2.getTransactionType());
-        existingPaymentTransactionDTO.setTransactionDescription(paymentTransactionDTO2.getTransactionDescription());
-        existingPaymentTransactionDTO.setTransactionNumber(paymentTransactionDTO2.getTransactionNumber());
-        existingPaymentTransactionDTO.setVendor(paymentTransactionDTO2.getVendor());
-
         // given
         given(this.productService.getProductById(any(Long.class))).willReturn(existingProductDTO);
-        given(this.paymentTransactionService.getPaymentTransactionById(any(Long.class))).willReturn(existingPaymentTransactionDTO);
         given(this.productService.updateProduct(any(Long.class), any(ProductDTO.class))).willReturn(productDTO1);
 
         // when
@@ -611,7 +533,6 @@ class ProductControllerTest {
                 .andExpect(content().json(expectedResponseJSON));
 
         verify(this.productService, times(1)).getProductById(any(Long.class));
-        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(any(Long.class));
         verify(this.productService, times(1)).updateProduct(any(Long.class), any(ProductDTO.class));
     }
 
@@ -636,19 +557,8 @@ class ProductControllerTest {
         existingProductDTO.setCreated(productDTO1.getCreated());
         existingProductDTO.setModified(productDTO1.getModified());
 
-        PaymentTransactionDTO existingPaymentTransactionDTO = new PaymentTransactionDTO();
-        existingPaymentTransactionDTO.setId(1L);
-        existingPaymentTransactionDTO.setProductDTO(paymentTransactionDTO2.getProductDTO());
-        existingPaymentTransactionDTO.setInvoiceDTO(paymentTransactionDTO2.getInvoiceDTO());
-        existingPaymentTransactionDTO.setTransactionAmount(paymentTransactionDTO2.getTransactionAmount());
-        existingPaymentTransactionDTO.setTransactionType(paymentTransactionDTO2.getTransactionType());
-        existingPaymentTransactionDTO.setTransactionDescription(paymentTransactionDTO2.getTransactionDescription());
-        existingPaymentTransactionDTO.setTransactionNumber(paymentTransactionDTO2.getTransactionNumber());
-        existingPaymentTransactionDTO.setVendor(paymentTransactionDTO2.getVendor());
-
         // given
         given(this.productService.getProductById(any(Long.class))).willReturn(existingProductDTO);
-        given(this.paymentTransactionService.getPaymentTransactionById(any(Long.class))).willReturn(existingPaymentTransactionDTO);
         given(this.productService.updateProduct(any(Long.class), any(ProductDTO.class))).willThrow(new DataIntegrityViolationException(""));
 
         // when
@@ -662,7 +572,6 @@ class ProductControllerTest {
                 .andExpect(content().json(expectedResponseJSON));
 
         verify(this.productService, times(1)).getProductById(any(Long.class));
-        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(any(Long.class));
         verify(this.productService, times(1)).updateProduct(any(Long.class), any(ProductDTO.class));
     }
 
@@ -677,7 +586,7 @@ class ProductControllerTest {
 
 
         String expectedReturnJSON = this.objectMapper.writeValueAsString(
-                new ResponsePayload<ProductDTO>(null, false, "ERROR: Internal Server Error! Additional error message")
+                new ResponsePayload<ProductDTO>(null, false, "Something went wrong! Additional error message")
         );
         String requestBody = this.objectMapper.writeValueAsString(productDTO1);
 
@@ -689,19 +598,8 @@ class ProductControllerTest {
         existingProductDTO.setCreated(productDTO1.getCreated());
         existingProductDTO.setModified(productDTO1.getModified());
 
-        PaymentTransactionDTO existingPaymentTransactionDTO = new PaymentTransactionDTO();
-        existingPaymentTransactionDTO.setId(1L);
-        existingPaymentTransactionDTO.setProductDTO(paymentTransactionDTO2.getProductDTO());
-        existingPaymentTransactionDTO.setInvoiceDTO(paymentTransactionDTO2.getInvoiceDTO());
-        existingPaymentTransactionDTO.setTransactionAmount(paymentTransactionDTO2.getTransactionAmount());
-        existingPaymentTransactionDTO.setTransactionType(paymentTransactionDTO2.getTransactionType());
-        existingPaymentTransactionDTO.setTransactionDescription(paymentTransactionDTO2.getTransactionDescription());
-        existingPaymentTransactionDTO.setTransactionNumber(paymentTransactionDTO2.getTransactionNumber());
-        existingPaymentTransactionDTO.setVendor(paymentTransactionDTO2.getVendor());
-
         // given
         given(this.productService.getProductById(any(Long.class))).willReturn(existingProductDTO);
-        given(this.paymentTransactionService.getPaymentTransactionById(any(Long.class))).willReturn(existingPaymentTransactionDTO);
         given(this.productService.updateProduct(any(Long.class), any(ProductDTO.class))).willThrow(new RuntimeException("Additional error message"));
 
         // when
@@ -715,7 +613,6 @@ class ProductControllerTest {
                 .andExpect(content().json(expectedReturnJSON));
 
         verify(this.productService, times(1)).getProductById(any(Long.class));
-        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(any(Long.class));
         verify(this.productService, times(1)).updateProduct(any(Long.class), any(ProductDTO.class));
     }
 

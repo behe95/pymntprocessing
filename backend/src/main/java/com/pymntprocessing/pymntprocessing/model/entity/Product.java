@@ -12,7 +12,7 @@ public class Product {
     @Column(name = "productPk")
     private Long id;
 
-    @OneToOne(mappedBy = "product")
+    @OneToOne(mappedBy = "product", cascade = CascadeType.MERGE)
     private PaymentTransaction paymentTransaction;
 
     private String productName;

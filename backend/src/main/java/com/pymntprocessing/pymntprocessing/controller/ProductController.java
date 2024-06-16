@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping(ApiConstants.V1.Product.PRODUCT_PATH)
@@ -33,25 +34,13 @@ public class ProductController {
     public ResponseEntity<ResponsePayload<ProductDTO>> getProductById(@PathVariable Long id) {
         ProductDTO productDTO = this.productService.getProductById(id);
 
-        if (productDTO != null) {
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(new ResponsePayload<>(productDTO, true, ""));
-        }
-
         return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(new ResponsePayload<>(null, false, "Product not found!"));
+                .status(HttpStatus.OK)
+                .body(new ResponsePayload<>(productDTO, true, ""));
     }
     @GetMapping
     public ResponseEntity<ResponsePayload<List<ProductDTO>>> getAllProduct() {
         List<ProductDTO> productDTOS = this.productService.getAllProducts();
-
-        if (productDTOS.isEmpty()) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(new ResponsePayload<>(null, false, "Products not found"));
-        }
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -60,51 +49,15 @@ public class ProductController {
 
     @PostMapping
     public ResponseEntity<ResponsePayload<ProductDTO>> createProduct(@RequestBody ProductDTO productDTO) {
-        PaymentTransactionDTO paymentTransactionDTO = productDTO.getPaymentTransactionDTO();
-
-        String errorMessage = "";
-        /**
-         * validate data
-         */
-        if (paymentTransactionDTO != null && paymentTransactionDTO.getId() != null) {
-
-            PaymentTransactionDTO existingPaymentTransaction = this.paymentTransactionService.getPaymentTransactionById(paymentTransactionDTO.getId());
-
-            if (existingPaymentTransaction.getProductDTO() != null) {
-                errorMessage = "Unable to assign payment transaction " + existingPaymentTransaction.getTransactionNumber() + " to Product " + productDTO.getProductName();
-
-                return ResponseEntity
-                        .status(HttpStatus.BAD_REQUEST)
-                        .body(new ResponsePayload<>(null, false, errorMessage));
-            }
-        }
-
-        try {
-            ProductDTO newProductDTO = this.productService.createProduct(productDTO);
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(new ResponsePayload<ProductDTO>(newProductDTO, true, "Product created!"));
-        } catch (DataIntegrityViolationException e) {
-            errorMessage = "ERROR: Duplicate entry!";
-            if (e.getRootCause() != null) {
-                errorMessage = e.getRootCause().getMessage();
-            }
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponsePayload<>(null, false, errorMessage));
-        } catch (Exception ex) {
-            errorMessage = "ERROR: Internal Server Error! " + ex.getMessage();
-
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponsePayload<>(null, false, errorMessage));
-        }
+        ProductDTO newProductDTO = this.productService.createProduct(productDTO);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new ResponsePayload<ProductDTO>(newProductDTO, true, "Product created!"));
 
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ResponsePayload<ProductDTO>> updateProduct(@PathVariable Long id, @RequestBody ProductDTO productDTO) {
-        PaymentTransactionDTO paymentTransactionDTO = productDTO.getPaymentTransactionDTO();
 
         String errorMessage = "";
         /**
@@ -123,39 +76,10 @@ public class ProductController {
             }
         }
 
-        if (paymentTransactionDTO != null && paymentTransactionDTO.getId() != null) {
-
-            PaymentTransactionDTO existingPaymentTransaction = this.paymentTransactionService.getPaymentTransactionById(paymentTransactionDTO.getId());
-
-            if (existingPaymentTransaction.getProductDTO() != null) {
-                errorMessage = "Unable to assign payment transaction " + existingPaymentTransaction.getTransactionNumber() + " to Product " + productDTO.getProductName();
-
-                return ResponseEntity
-                        .status(HttpStatus.BAD_REQUEST)
-                        .body(new ResponsePayload<>(null, false, errorMessage));
-            }
-        }
-
-        try {
-            ProductDTO newProductDTO = this.productService.updateProduct(id, productDTO);
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(new ResponsePayload<ProductDTO>(newProductDTO, true, "Product updated!"));
-        } catch (DataIntegrityViolationException e) {
-            errorMessage = "ERROR: Duplicate entry!";
-            if (e.getRootCause() != null) {
-                errorMessage = e.getRootCause().getMessage();
-            }
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponsePayload<>(null, false, errorMessage));
-        } catch (Exception ex) {
-            errorMessage = "ERROR: Internal Server Error! " + ex.getMessage();
-
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponsePayload<>(null, false, errorMessage));
-        }
+        ProductDTO newProductDTO = this.productService.updateProduct(id, productDTO);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ResponsePayload<ProductDTO>(newProductDTO, true, "Product updated!"));
 
     }
 
