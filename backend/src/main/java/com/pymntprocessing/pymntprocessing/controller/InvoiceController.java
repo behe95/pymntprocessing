@@ -2,8 +2,10 @@ package com.pymntprocessing.pymntprocessing.controller;
 
 import com.pymntprocessing.pymntprocessing.constant.ApiConstants;
 import com.pymntprocessing.pymntprocessing.constant.db.InvoiceStatusValue;
-import com.pymntprocessing.pymntprocessing.dto.InvoiceDTO;
-import com.pymntprocessing.pymntprocessing.entity.*;
+import com.pymntprocessing.pymntprocessing.model.dto.InvoiceDTO;
+import com.pymntprocessing.pymntprocessing.model.entity.InvoiceStatus;
+import com.pymntprocessing.pymntprocessing.model.entity.ResponsePayload;
+import com.pymntprocessing.pymntprocessing.model.entity.Vendor;
 import com.pymntprocessing.pymntprocessing.service.InvoiceService;
 import com.pymntprocessing.pymntprocessing.service.VendorService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,54 +31,54 @@ public class InvoiceController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseMessage<InvoiceDTO>> getInvoiceById(@PathVariable Long id) {
+    public ResponseEntity<ResponsePayload<InvoiceDTO>> getInvoiceById(@PathVariable Long id) {
         InvoiceDTO invoiceDTO = this.invoiceService.getInvoiceById(id);
 
         if (invoiceDTO != null) {
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(new ResponseMessage<>(invoiceDTO, true, ""));
+                    .body(new ResponsePayload<>(invoiceDTO, true, ""));
         }
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(new ResponseMessage<>(null, false, "Payment transaction not found!"));
+                .body(new ResponsePayload<>(null, false, "Invoice not found!"));
     }
 
     @GetMapping
-    public ResponseEntity<ResponseMessage<List<InvoiceDTO>>> getAllInvoice() {
+    public ResponseEntity<ResponsePayload<List<InvoiceDTO>>> getAllInvoice() {
         List<InvoiceDTO> invoiceDTOS = this.invoiceService.getAllInvoice();
 
         if (invoiceDTOS.isEmpty()) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseMessage<List<InvoiceDTO>>(invoiceDTOS, false, "Payment transactions not found!"));
+                    .body(new ResponsePayload<List<InvoiceDTO>>(invoiceDTOS, false, "Payment transactions not found!"));
 
         }
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new ResponseMessage<List<InvoiceDTO>>(invoiceDTOS, true, ""));
+                .body(new ResponsePayload<List<InvoiceDTO>>(invoiceDTOS, true, ""));
 
     }
 
     @GetMapping("/vendor/{vendorId}")
-    public ResponseEntity<ResponseMessage<List<InvoiceDTO>>> getAllInvoiceByVendorId(@PathVariable("vendorId") Long id) {
+    public ResponseEntity<ResponsePayload<List<InvoiceDTO>>> getAllInvoiceByVendorId(@PathVariable("vendorId") Long id) {
         List<InvoiceDTO> invoiceDTOS = this.invoiceService.getAllInvoiceByVendorId(id);
 
         if (invoiceDTOS.isEmpty()) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseMessage<List<InvoiceDTO>>(invoiceDTOS, false, "Vendor doesn't have any payment transaction!"));
+                    .body(new ResponsePayload<List<InvoiceDTO>>(invoiceDTOS, false, "Vendor doesn't have any payment transaction!"));
         }
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new ResponseMessage<List<InvoiceDTO>>(invoiceDTOS, true, ""));
+                .body(new ResponsePayload<List<InvoiceDTO>>(invoiceDTOS, true, ""));
     }
 
     @PostMapping
-    public ResponseEntity<ResponseMessage<InvoiceDTO>> createInvoice(@RequestBody InvoiceDTO invoiceDTO) {
+    public ResponseEntity<ResponsePayload<InvoiceDTO>> createInvoice(@RequestBody InvoiceDTO invoiceDTO) {
         Vendor vendor = invoiceDTO.getVendor();
         InvoiceStatus invoiceStatus = invoiceDTO.getInvoiceStatus();
 
@@ -98,7 +100,7 @@ public class InvoiceController {
         if (invalidRequestBody) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
 
         /**
@@ -112,7 +114,7 @@ public class InvoiceController {
             errorMessage = "Invalid vendor provided!";
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
 
         /**
@@ -124,7 +126,7 @@ public class InvoiceController {
             errorMessage = "Invalid invoice status provided!";
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
 
 
@@ -132,7 +134,7 @@ public class InvoiceController {
             InvoiceDTO newInvoiceDTO = this.invoiceService.createInvoice(invoiceDTO);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .body(new ResponseMessage<>(newInvoiceDTO, true, "Payment transaction created!"));
+                    .body(new ResponsePayload<>(newInvoiceDTO, true, "Payment transaction created!"));
         } catch (DataIntegrityViolationException e) {
             errorMessage = "ERROR: Duplicate entry!";
             if (e.getRootCause() != null) {
@@ -140,19 +142,19 @@ public class InvoiceController {
             }
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         } catch (Exception ex) {
             errorMessage = "ERROR: Internal Server Error! " + ex.getMessage();
 
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
 
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseMessage<InvoiceDTO>> updateInvoice(@PathVariable Long id, @RequestBody InvoiceDTO invoiceDTO) {
+    public ResponseEntity<ResponsePayload<InvoiceDTO>> updateInvoice(@PathVariable Long id, @RequestBody InvoiceDTO invoiceDTO) {
 
         Vendor vendor = invoiceDTO.getVendor();
         InvoiceStatus invoiceStatus = invoiceDTO.getInvoiceStatus();
@@ -175,7 +177,7 @@ public class InvoiceController {
         if (invalidRequestBody) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
 
         /**
@@ -189,7 +191,7 @@ public class InvoiceController {
             errorMessage = "Invalid vendor provided!";
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
 
         /**
@@ -204,7 +206,7 @@ public class InvoiceController {
             errorMessage = "Unable to update transaction. Transaction status: " + invoiceStatus.getName();
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
 
 
@@ -212,7 +214,7 @@ public class InvoiceController {
             InvoiceDTO updatedInvoiceDTO = this.invoiceService.updateInvoice(id, invoiceDTO);
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(new ResponseMessage<>(updatedInvoiceDTO, true, "Invoice has been updated!"));
+                    .body(new ResponsePayload<>(updatedInvoiceDTO, true, "Invoice has been updated!"));
         } catch (DataIntegrityViolationException e) {
             errorMessage = "ERROR: Duplicate entry!";
             if (e.getRootCause() != null) {
@@ -220,26 +222,26 @@ public class InvoiceController {
             }
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         } catch (Exception ex) {
             errorMessage = "ERROR: Internal Server Error! " + ex.getMessage();
 
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
     }
 
 
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseMessage<InvoiceDTO>> deleteInvoice(@PathVariable Long id) {
+    public ResponseEntity<ResponsePayload<InvoiceDTO>> deleteInvoice(@PathVariable Long id) {
         InvoiceDTO invoiceDTO = this.invoiceService.getInvoiceById(id);
 
         if (invoiceDTO == null) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, "Invalid id provided"));
+                    .body(new ResponsePayload<>(null, false, "Invalid id provided"));
         }
 
         InvoiceStatus invoiceStatus = invoiceDTO.getInvoiceStatus();
@@ -258,12 +260,12 @@ public class InvoiceController {
 
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
 
         this.invoiceService.deleteInvoice(id);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new ResponseMessage<>(null, true, "Invoice " + invoiceDTO.getInvoiceNumber() + " has been deleted"));
+                .body(new ResponsePayload<>(null, true, "Invoice " + invoiceDTO.getInvoiceNumber() + " has been deleted"));
     }
 }

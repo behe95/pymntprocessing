@@ -1,8 +1,7 @@
 package com.pymntprocessing.pymntprocessing.service;
 
-import com.pymntprocessing.pymntprocessing.dto.InvoiceDTO;
-import com.pymntprocessing.pymntprocessing.entity.InvoiceStatus;
-import com.pymntprocessing.pymntprocessing.entity.Invoice;
+import com.pymntprocessing.pymntprocessing.model.dto.InvoiceDTO;
+import com.pymntprocessing.pymntprocessing.model.entity.InvoiceStatus;
 
 import java.util.List;
 

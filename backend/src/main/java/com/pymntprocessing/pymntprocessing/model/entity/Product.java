@@ -1,20 +1,26 @@
-package com.pymntprocessing.pymntprocessing.dto;
+package com.pymntprocessing.pymntprocessing.model.entity;
 
-import com.pymntprocessing.pymntprocessing.entity.PaymentTransaction;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
-public class ProductDTO {
+@Entity
+@Table(name = "Product")
+public class Product {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "productPk")
     private Long id;
 
-    private PaymentTransactionDTO paymentTransactionDTO;
+    @OneToOne(mappedBy = "product")
+    private PaymentTransaction paymentTransaction;
 
     private String productName;
 
     private String productDescription;
 
     private LocalDateTime created;
+
     private LocalDateTime modified;
 
 
@@ -26,12 +32,12 @@ public class ProductDTO {
         this.id = id;
     }
 
-    public PaymentTransactionDTO getPaymentTransactionDTO() {
-        return paymentTransactionDTO;
+    public PaymentTransaction getPaymentTransaction() {
+        return paymentTransaction;
     }
 
-    public void setPaymentTransactionDTO(PaymentTransactionDTO paymentTransactionDTO) {
-        this.paymentTransactionDTO = paymentTransactionDTO;
+    public void setPaymentTransaction(PaymentTransaction paymentTransaction) {
+        this.paymentTransaction = paymentTransaction;
     }
 
     public String getProductName() {
@@ -65,5 +71,4 @@ public class ProductDTO {
     public void setModified(LocalDateTime modified) {
         this.modified = modified;
     }
-
 }

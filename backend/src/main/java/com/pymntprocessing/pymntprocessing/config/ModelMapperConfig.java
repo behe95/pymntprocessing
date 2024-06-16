@@ -1,9 +1,9 @@
 package com.pymntprocessing.pymntprocessing.config;
 
-import com.pymntprocessing.pymntprocessing.dto.InvoiceDTO;
-import com.pymntprocessing.pymntprocessing.dto.PaymentTransactionDTO;
-import com.pymntprocessing.pymntprocessing.entity.Invoice;
-import com.pymntprocessing.pymntprocessing.entity.PaymentTransaction;
+import com.pymntprocessing.pymntprocessing.model.dto.InvoiceDTO;
+import com.pymntprocessing.pymntprocessing.model.dto.PaymentTransactionDTO;
+import com.pymntprocessing.pymntprocessing.model.entity.Invoice;
+import com.pymntprocessing.pymntprocessing.model.entity.PaymentTransaction;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

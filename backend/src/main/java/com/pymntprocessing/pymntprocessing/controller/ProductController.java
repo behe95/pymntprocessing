@@ -2,12 +2,9 @@ package com.pymntprocessing.pymntprocessing.controller;
 
 
 import com.pymntprocessing.pymntprocessing.constant.ApiConstants;
-import com.pymntprocessing.pymntprocessing.constant.db.TransactionTypeValue;
-import com.pymntprocessing.pymntprocessing.dto.PaymentTransactionDTO;
-import com.pymntprocessing.pymntprocessing.dto.ProductDTO;
-import com.pymntprocessing.pymntprocessing.entity.ResponseMessage;
-import com.pymntprocessing.pymntprocessing.entity.TransactionType;
-import com.pymntprocessing.pymntprocessing.entity.Vendor;
+import com.pymntprocessing.pymntprocessing.model.dto.PaymentTransactionDTO;
+import com.pymntprocessing.pymntprocessing.model.dto.ProductDTO;
+import com.pymntprocessing.pymntprocessing.model.entity.ResponsePayload;
 import com.pymntprocessing.pymntprocessing.service.PaymentTransactionService;
 import com.pymntprocessing.pymntprocessing.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Objects;
 
 @RestController
 @RequestMapping(ApiConstants.V1.Product.PRODUCT_PATH)
@@ -34,36 +30,36 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseMessage<ProductDTO>> getProductById(@PathVariable Long id) {
+    public ResponseEntity<ResponsePayload<ProductDTO>> getProductById(@PathVariable Long id) {
         ProductDTO productDTO = this.productService.getProductById(id);
 
         if (productDTO != null) {
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(new ResponseMessage<>(productDTO, true, ""));
+                    .body(new ResponsePayload<>(productDTO, true, ""));
         }
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(new ResponseMessage<>(null, false, "Product not found!"));
+                .body(new ResponsePayload<>(null, false, "Product not found!"));
     }
     @GetMapping
-    public ResponseEntity<ResponseMessage<List<ProductDTO>>> getAllProduct() {
+    public ResponseEntity<ResponsePayload<List<ProductDTO>>> getAllProduct() {
         List<ProductDTO> productDTOS = this.productService.getAllProducts();
 
         if (productDTOS.isEmpty()) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseMessage<>(null, false, "Products not found"));
+                    .body(new ResponsePayload<>(null, false, "Products not found"));
         }
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new ResponseMessage<>(productDTOS, true, ""));
+                .body(new ResponsePayload<>(productDTOS, true, ""));
     }
 
     @PostMapping
-    public ResponseEntity<ResponseMessage<ProductDTO>> createProduct(@RequestBody ProductDTO productDTO) {
+    public ResponseEntity<ResponsePayload<ProductDTO>> createProduct(@RequestBody ProductDTO productDTO) {
         PaymentTransactionDTO paymentTransactionDTO = productDTO.getPaymentTransactionDTO();
 
         String errorMessage = "";
@@ -79,7 +75,7 @@ public class ProductController {
 
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
-                        .body(new ResponseMessage<>(null, false, errorMessage));
+                        .body(new ResponsePayload<>(null, false, errorMessage));
             }
         }
 
@@ -87,7 +83,7 @@ public class ProductController {
             ProductDTO newProductDTO = this.productService.createProduct(productDTO);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .body(new ResponseMessage<ProductDTO>(newProductDTO, true, "Product created!"));
+                    .body(new ResponsePayload<ProductDTO>(newProductDTO, true, "Product created!"));
         } catch (DataIntegrityViolationException e) {
             errorMessage = "ERROR: Duplicate entry!";
             if (e.getRootCause() != null) {
@@ -95,19 +91,19 @@ public class ProductController {
             }
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         } catch (Exception ex) {
             errorMessage = "ERROR: Internal Server Error! " + ex.getMessage();
 
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
 
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseMessage<ProductDTO>> updateProduct(@PathVariable Long id, @RequestBody ProductDTO productDTO) {
+    public ResponseEntity<ResponsePayload<ProductDTO>> updateProduct(@PathVariable Long id, @RequestBody ProductDTO productDTO) {
         PaymentTransactionDTO paymentTransactionDTO = productDTO.getPaymentTransactionDTO();
 
         String errorMessage = "";
@@ -117,13 +113,13 @@ public class ProductController {
         if (id == null || productDTO.getId() == null || !id.equals(productDTO.getId())) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, "Product id not provided!"));
+                    .body(new ResponsePayload<>(null, false, "Product id not provided!"));
         } else {
             ProductDTO existingProductDTO = this.productService.getProductById(id);
             if (existingProductDTO == null) {
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
-                        .body(new ResponseMessage<>(null, false, "Product doesn't exist!"));
+                        .body(new ResponsePayload<>(null, false, "Product doesn't exist!"));
             }
         }
 
@@ -136,7 +132,7 @@ public class ProductController {
 
                 return ResponseEntity
                         .status(HttpStatus.BAD_REQUEST)
-                        .body(new ResponseMessage<>(null, false, errorMessage));
+                        .body(new ResponsePayload<>(null, false, errorMessage));
             }
         }
 
@@ -144,7 +140,7 @@ public class ProductController {
             ProductDTO newProductDTO = this.productService.updateProduct(id, productDTO);
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(new ResponseMessage<ProductDTO>(newProductDTO, true, "Product updated!"));
+                    .body(new ResponsePayload<ProductDTO>(newProductDTO, true, "Product updated!"));
         } catch (DataIntegrityViolationException e) {
             errorMessage = "ERROR: Duplicate entry!";
             if (e.getRootCause() != null) {
@@ -152,25 +148,25 @@ public class ProductController {
             }
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         } catch (Exception ex) {
             errorMessage = "ERROR: Internal Server Error! " + ex.getMessage();
 
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
 
     }
 
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseMessage<PaymentTransactionDTO>> deletePaymentTransaction(@PathVariable Long id) {
+    public ResponseEntity<ResponsePayload<PaymentTransactionDTO>> deletePaymentTransaction(@PathVariable Long id) {
         ProductDTO existingProductDTO = this.productService.getProductById(id);
         if (existingProductDTO == null) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, "Product doesn't exist!"));
+                    .body(new ResponsePayload<>(null, false, "Product doesn't exist!"));
         }
 
 
@@ -189,7 +185,7 @@ public class ProductController {
         this.productService.deleteProduct(id);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new ResponseMessage<>(null, true, "Product " + existingProductDTO.getProductName() + " has been deleted"));
+                .body(new ResponsePayload<>(null, true, "Product " + existingProductDTO.getProductName() + " has been deleted"));
     }
 
 

@@ -1,6 +1,6 @@
 package com.pymntprocessing.pymntprocessing.repository;
 
-import com.pymntprocessing.pymntprocessing.entity.Vendor;
+import com.pymntprocessing.pymntprocessing.model.entity.Vendor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

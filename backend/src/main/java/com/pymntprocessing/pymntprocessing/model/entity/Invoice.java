@@ -1,21 +1,32 @@
-package com.pymntprocessing.pymntprocessing.dto;
+package com.pymntprocessing.pymntprocessing.model.entity;
 
-import com.pymntprocessing.pymntprocessing.entity.InvoiceStatus;
-import com.pymntprocessing.pymntprocessing.entity.Vendor;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class InvoiceDTO {
+@Entity
+@Table(name = "Invoice")
+public class Invoice {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "invoicePk")
     private Long id;
 
+    @ManyToOne
+    @JoinColumn(name = "fkVendor", referencedColumnName = "vendorPk")
     private Vendor vendor;
 
 
+    @OneToOne
+    @JoinColumn(name = "fkInvoiceStatus", referencedColumnName = "invoiceStatusPk")
     private InvoiceStatus invoiceStatus;
 
-    private List<PaymentTransactionDTO> paymentTransactionDTO;
+
+//    @OneToMany(mappedBy = "invoice")
+    @OneToMany
+    @JoinColumn(name = "fkInvoice", referencedColumnName = "invoicePk")
+    private List<PaymentTransaction> paymentTransaction;
 
     private int invoiceNumber;
 
@@ -53,12 +64,12 @@ public class InvoiceDTO {
         this.invoiceStatus = invoiceStatus;
     }
 
-    public List<PaymentTransactionDTO> getPaymentTransactionDTO() {
-        return paymentTransactionDTO;
+    public List<PaymentTransaction> getPaymentTransaction() {
+        return paymentTransaction;
     }
 
-    public void setPaymentTransactionDTO(List<PaymentTransactionDTO> paymentTransactionDTO) {
-        this.paymentTransactionDTO = paymentTransactionDTO;
+    public void setPaymentTransaction(List<PaymentTransaction> paymentTransaction) {
+        this.paymentTransaction = paymentTransaction;
     }
 
     public int getInvoiceNumber() {
@@ -124,5 +135,4 @@ public class InvoiceDTO {
     public void setModified(LocalDateTime modified) {
         this.modified = modified;
     }
-
 }

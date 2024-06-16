@@ -1,6 +1,6 @@
 package com.pymntprocessing.pymntprocessing.service;
 
-import com.pymntprocessing.pymntprocessing.entity.Vendor;
+import com.pymntprocessing.pymntprocessing.model.entity.Vendor;
 import com.pymntprocessing.pymntprocessing.repository.VendorRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;

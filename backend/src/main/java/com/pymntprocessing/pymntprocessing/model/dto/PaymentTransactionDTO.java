@@ -1,36 +1,19 @@
-package com.pymntprocessing.pymntprocessing.entity;
+package com.pymntprocessing.pymntprocessing.model.dto;
 
-import jakarta.persistence.*;
+import com.pymntprocessing.pymntprocessing.model.entity.TransactionType;
+import com.pymntprocessing.pymntprocessing.model.entity.Vendor;
 
-@Entity
-@Table(name = "PaymentTransaction")
-public class PaymentTransaction {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "paymentTransactionPk")
+public class PaymentTransactionDTO {
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "fkProduct", referencedColumnName = "productPk")
-    private Product product;
-
-    @ManyToOne
-    @JoinColumn(name = "fkVendor", referencedColumnName = "vendorPk")
+    private ProductDTO productDTO;
     private Vendor vendor;
-
-    @ManyToOne
-    @JoinColumn(name = "fkInvoice", referencedColumnName = "invoicePk")
-    private Invoice invoice;
-
-    @OneToOne
-    @JoinColumn(name = "fkTransactionType", referencedColumnName = "transactionTypePk")
+    private InvoiceDTO invoiceDTO;
     private TransactionType transactionType;
-
     private int transactionNumber;
-
     private String transactionDescription;
-
     private Double transactionAmount;
+
 
     public Long getId() {
         return id;
@@ -40,12 +23,12 @@ public class PaymentTransaction {
         this.id = id;
     }
 
-    public Product getProduct() {
-        return product;
+    public ProductDTO getProductDTO() {
+        return productDTO;
     }
 
-    public void setProduct(Product product) {
-        this.product = product;
+    public void setProductDTO(ProductDTO productDTO) {
+        this.productDTO = productDTO;
     }
 
     public Vendor getVendor() {
@@ -56,13 +39,12 @@ public class PaymentTransaction {
         this.vendor = vendor;
     }
 
-
-    public Invoice getInvoice() {
-        return invoice;
+    public InvoiceDTO getInvoiceDTO() {
+        return invoiceDTO;
     }
 
-    public void setInvoice(Invoice invoice) {
-        this.invoice = invoice;
+    public void setInvoiceDTO(InvoiceDTO invoiceDTO) {
+        this.invoiceDTO = invoiceDTO;
     }
 
     public TransactionType getTransactionType() {

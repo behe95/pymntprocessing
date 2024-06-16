@@ -2,8 +2,7 @@ package com.pymntprocessing.pymntprocessing.service;
 
 
 
-import com.pymntprocessing.pymntprocessing.dto.ProductDTO;
-import com.pymntprocessing.pymntprocessing.entity.Product;
+import com.pymntprocessing.pymntprocessing.model.dto.ProductDTO;
 
 import java.util.List;
 

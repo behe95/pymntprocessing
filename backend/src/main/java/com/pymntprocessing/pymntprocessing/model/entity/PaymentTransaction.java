@@ -1,19 +1,36 @@
-package com.pymntprocessing.pymntprocessing.dto;
+package com.pymntprocessing.pymntprocessing.model.entity;
 
-import com.pymntprocessing.pymntprocessing.entity.TransactionType;
-import com.pymntprocessing.pymntprocessing.entity.Vendor;
+import jakarta.persistence.*;
 
-public class PaymentTransactionDTO {
+@Entity
+@Table(name = "PaymentTransaction")
+public class PaymentTransaction {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "paymentTransactionPk")
     private Long id;
 
-    private ProductDTO productDTO;
-    private Vendor vendor;
-    private InvoiceDTO invoiceDTO;
-    private TransactionType transactionType;
-    private int transactionNumber;
-    private String transactionDescription;
-    private Double transactionAmount;
+    @OneToOne
+    @JoinColumn(name = "fkProduct", referencedColumnName = "productPk")
+    private Product product;
 
+    @ManyToOne
+    @JoinColumn(name = "fkVendor", referencedColumnName = "vendorPk")
+    private Vendor vendor;
+
+    @ManyToOne
+    @JoinColumn(name = "fkInvoice", referencedColumnName = "invoicePk")
+    private Invoice invoice;
+
+    @OneToOne
+    @JoinColumn(name = "fkTransactionType", referencedColumnName = "transactionTypePk")
+    private TransactionType transactionType;
+
+    private int transactionNumber;
+
+    private String transactionDescription;
+
+    private Double transactionAmount;
 
     public Long getId() {
         return id;
@@ -23,12 +40,12 @@ public class PaymentTransactionDTO {
         this.id = id;
     }
 
-    public ProductDTO getProductDTO() {
-        return productDTO;
+    public Product getProduct() {
+        return product;
     }
 
-    public void setProductDTO(ProductDTO productDTO) {
-        this.productDTO = productDTO;
+    public void setProduct(Product product) {
+        this.product = product;
     }
 
     public Vendor getVendor() {
@@ -39,12 +56,13 @@ public class PaymentTransactionDTO {
         this.vendor = vendor;
     }
 
-    public InvoiceDTO getInvoiceDTO() {
-        return invoiceDTO;
+
+    public Invoice getInvoice() {
+        return invoice;
     }
 
-    public void setInvoiceDTO(InvoiceDTO invoiceDTO) {
-        this.invoiceDTO = invoiceDTO;
+    public void setInvoice(Invoice invoice) {
+        this.invoice = invoice;
     }
 
     public TransactionType getTransactionType() {

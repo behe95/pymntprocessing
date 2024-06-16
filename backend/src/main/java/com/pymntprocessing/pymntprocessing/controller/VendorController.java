@@ -1,8 +1,8 @@
 package com.pymntprocessing.pymntprocessing.controller;
 
 import com.pymntprocessing.pymntprocessing.constant.ApiConstants;
-import com.pymntprocessing.pymntprocessing.entity.ResponseMessage;
-import com.pymntprocessing.pymntprocessing.entity.Vendor;
+import com.pymntprocessing.pymntprocessing.model.entity.ResponsePayload;
+import com.pymntprocessing.pymntprocessing.model.entity.Vendor;
 import com.pymntprocessing.pymntprocessing.service.VendorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -25,39 +25,39 @@ public class VendorController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseMessage<Vendor>> getVendorById(@PathVariable Long id) {
+    public ResponseEntity<ResponsePayload<Vendor>> getVendorById(@PathVariable Long id) {
         Vendor vendor = this.vendorService.getVendorById(id);
         if (vendor != null) {
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(new ResponseMessage<Vendor>(vendor, true, ""));
+                    .body(new ResponsePayload<Vendor>(vendor, true, ""));
         }
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(new ResponseMessage<>(null, false, "Vendor with id " + id + " is not found"));
+                .body(new ResponsePayload<>(null, false, "Vendor with id " + id + " is not found"));
     }
 
     @GetMapping
-    public ResponseEntity<ResponseMessage<List<Vendor>>> getAllVendors() {
+    public ResponseEntity<ResponsePayload<List<Vendor>>> getAllVendors() {
         List<Vendor> vendors = this.vendorService.getAllVendors();
         if (vendors.isEmpty()) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseMessage<List<Vendor>>(vendors, false, "Vendors not found!"));
+                    .body(new ResponsePayload<List<Vendor>>(vendors, false, "Vendors not found!"));
         }
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new ResponseMessage<List<Vendor>>(vendors, true, ""));
+                .body(new ResponsePayload<List<Vendor>>(vendors, true, ""));
     }
 
     @PostMapping
-    public ResponseEntity<ResponseMessage<Vendor>> createVendor(@RequestBody Vendor vendor) {
+    public ResponseEntity<ResponsePayload<Vendor>> createVendor(@RequestBody Vendor vendor) {
         try {
             Vendor savedVendor = this.vendorService.createVendor(vendor);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .body(new ResponseMessage<Vendor>(vendor, true, "Vendor " + vendor.getName() + " created successfully!"));
+                    .body(new ResponsePayload<Vendor>(vendor, true, "Vendor " + vendor.getName() + " created successfully!"));
         } catch (DataIntegrityViolationException e) {
             String errorMessage = "ERROR: Duplicate entry!";
             if (e.getRootCause() != null) {
@@ -65,7 +65,7 @@ public class VendorController {
             }
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<Vendor>(null, false, errorMessage));
+                    .body(new ResponsePayload<Vendor>(null, false, errorMessage));
         } catch (Exception ex) {
             String errorMessage = "ERROR: Internal Server Error!";
 
@@ -73,17 +73,17 @@ public class VendorController {
 
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseMessage<Vendor>(null, false, errorMessage));
+                    .body(new ResponsePayload<Vendor>(null, false, errorMessage));
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseMessage<Vendor>> updateVendor(@PathVariable Long id, @RequestBody Vendor vendor) {
+    public ResponseEntity<ResponsePayload<Vendor>> updateVendor(@PathVariable Long id, @RequestBody Vendor vendor) {
         try {
             Vendor updatedVendor = this.vendorService.updateVendor(id, vendor);
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(new ResponseMessage<>(updatedVendor, true, "Vendor " + vendor.getName() + " has been updated!"));
+                    .body(new ResponsePayload<>(updatedVendor, true, "Vendor " + vendor.getName() + " has been updated!"));
         } catch (DataIntegrityViolationException e) {
             String errorMessage = "ERROR: Duplicate entry!";
             if (e.getRootCause() != null) {
@@ -91,7 +91,7 @@ public class VendorController {
             }
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         } catch (Exception ex) {
             String errorMessage = "ERROR: Internal Server Error!";
 
@@ -99,23 +99,23 @@ public class VendorController {
 
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseMessage<Vendor>> deleteVendor(@PathVariable Long id) {
+    public ResponseEntity<ResponsePayload<Vendor>> deleteVendor(@PathVariable Long id) {
         Vendor vendor = this.vendorService.getVendorById(id);
 
         if (vendor != null) {
             this.vendorService.deleteVendor(id);
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(new ResponseMessage<>(null, true, "Vendor " + vendor.getName() + " has been deleted"));
+                    .body(new ResponsePayload<>(null, true, "Vendor " + vendor.getName() + " has been deleted"));
         }
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(new ResponseMessage<>(null, false, "Invalid id provided"));
+                .body(new ResponsePayload<>(null, false, "Invalid id provided"));
     }
 }

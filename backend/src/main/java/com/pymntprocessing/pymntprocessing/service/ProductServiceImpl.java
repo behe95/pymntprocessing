@@ -1,8 +1,8 @@
 package com.pymntprocessing.pymntprocessing.service;
 
-import com.pymntprocessing.pymntprocessing.dto.ProductConverter;
-import com.pymntprocessing.pymntprocessing.dto.ProductDTO;
-import com.pymntprocessing.pymntprocessing.entity.Product;
+import com.pymntprocessing.pymntprocessing.model.mapper.ProductMapper;
+import com.pymntprocessing.pymntprocessing.model.dto.ProductDTO;
+import com.pymntprocessing.pymntprocessing.model.entity.Product;
 import com.pymntprocessing.pymntprocessing.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,41 +15,34 @@ public class ProductServiceImpl implements ProductService{
 
     private final ProductRepository productRepository;
 
-    private final ProductConverter productConverter;
+    private final ProductMapper productMapper;
 
     @Autowired
-    public ProductServiceImpl(ProductRepository productRepository, ProductConverter productConverter) {
+    public ProductServiceImpl(ProductRepository productRepository, ProductMapper productMapper) {
         this.productRepository = productRepository;
-        this.productConverter = productConverter;
+        this.productMapper = productMapper;
     }
 
     @Override
     public List<ProductDTO> getAllProducts() {
-        return this.productRepository.findAll().stream().map(this.productConverter::toDTO).toList();
+        return this.productRepository.findAll().stream().map(this.productMapper::convertToDTO).toList();
     }
 
     @Override
     public ProductDTO getProductById(Long id) {
-        Optional<Product> product = this.productRepository.findById(id);
-        ProductDTO productDTO = null;
-
-        if (product.isPresent()) {
-            productDTO = this.productConverter.toDTO(product.get());
-        }
-
-        return productDTO;
+        return this.productRepository.findById(id).map(this.productMapper::convertToDTO).orElse(null);
     }
 
     @Override
     public ProductDTO createProduct(ProductDTO productDTO) {
-        return this.productConverter.toDTO(this.productRepository.save(this.productConverter.toEntity(productDTO)));
+        return this.productMapper.convertToDTO(this.productRepository.save(this.productMapper.convertToEntity(productDTO)));
     }
 
     @Override
     public ProductDTO updateProduct(Long id, ProductDTO productDTO) {
         Optional<Product> existingProduct = this.productRepository.findById(id);
         if (existingProduct.isPresent()) {
-            return this.productConverter.toDTO(this.productRepository.save(this.productConverter.toEntity(productDTO)));
+            return this.productMapper.convertToDTO(this.productRepository.save(this.productMapper.convertToEntity(productDTO)));
         }
         return null;
     }

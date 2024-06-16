@@ -1,8 +1,7 @@
 package com.pymntprocessing.pymntprocessing.service;
 
-import com.pymntprocessing.pymntprocessing.dto.PaymentTransactionDTO;
-import com.pymntprocessing.pymntprocessing.entity.PaymentTransaction;
-import com.pymntprocessing.pymntprocessing.entity.TransactionType;
+import com.pymntprocessing.pymntprocessing.model.dto.PaymentTransactionDTO;
+import com.pymntprocessing.pymntprocessing.model.entity.TransactionType;
 
 import java.util.List;
 

@@ -1,15 +1,15 @@
-package com.pymntprocessing.pymntprocessing.entity;
+package com.pymntprocessing.pymntprocessing.model.entity;
 
-public class ResponseMessage <T> {
+public class ResponsePayload<T> {
     T data;
     String message;
 
     boolean isSuccess;
 
-    public ResponseMessage() {
+    public ResponsePayload() {
     }
 
-    public ResponseMessage(T data, boolean isSuccess, String message) {
+    public ResponsePayload(T data, boolean isSuccess, String message) {
         this.data = data;
         this.isSuccess = isSuccess;
         this.message = message;

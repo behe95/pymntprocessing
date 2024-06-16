@@ -1,7 +1,9 @@
 package com.pymntprocessing.pymntprocessing.controller;
 
-import com.pymntprocessing.pymntprocessing.dto.InvoiceDTO;
-import com.pymntprocessing.pymntprocessing.entity.*;
+import com.pymntprocessing.pymntprocessing.model.dto.InvoiceDTO;
+import com.pymntprocessing.pymntprocessing.model.entity.InvoiceStatus;
+import com.pymntprocessing.pymntprocessing.model.entity.ResponsePayload;
+import com.pymntprocessing.pymntprocessing.model.entity.Vendor;
 import com.pymntprocessing.pymntprocessing.service.InvoiceService;
 import com.pymntprocessing.pymntprocessing.service.VendorService;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,13 +77,13 @@ class InvoiceControllerTest {
         given(this.invoiceService.getAllInvoice()).willReturn(List.of(invoiceDTO1, invoiceDTO2));
 
         // when
-        ResponseEntity<ResponseMessage<List<InvoiceDTO>>> responseEntity = this.invoiceController.getAllInvoice();
+        ResponseEntity<ResponsePayload<List<InvoiceDTO>>> responseEntity = this.invoiceController.getAllInvoice();
 
         // then
-        ResponseMessage<List<InvoiceDTO>> responseMessage = (ResponseMessage<List<InvoiceDTO>>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        List<InvoiceDTO> invoiceDTOS = responseMessage.getData();
+        ResponsePayload<List<InvoiceDTO>> responsePayload = (ResponsePayload<List<InvoiceDTO>>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        List<InvoiceDTO> invoiceDTOS = responsePayload.getData();
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertTrue(isSuccess);
@@ -95,13 +97,13 @@ class InvoiceControllerTest {
         given(this.invoiceService.getAllInvoice()).willReturn(List.of());
 
         // when
-        ResponseEntity<ResponseMessage<List<InvoiceDTO>>> responseEntity = this.invoiceController.getAllInvoice();
+        ResponseEntity<ResponsePayload<List<InvoiceDTO>>> responseEntity = this.invoiceController.getAllInvoice();
 
         // then
-        ResponseMessage<List<InvoiceDTO>> responseMessage = (ResponseMessage<List<InvoiceDTO>>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        List<InvoiceDTO> invoiceDTOS = responseMessage.getData();
+        ResponsePayload<List<InvoiceDTO>> responsePayload = (ResponsePayload<List<InvoiceDTO>>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        List<InvoiceDTO> invoiceDTOS = responsePayload.getData();
 
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -115,13 +117,13 @@ class InvoiceControllerTest {
         given(this.invoiceService.getInvoiceById(1L)).willReturn(invoiceDTO1);
 
         // when
-        ResponseEntity<ResponseMessage<InvoiceDTO>> responseEntity = this.invoiceController.getInvoiceById(1L);
+        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.getInvoiceById(1L);
 
         // then
-        ResponseMessage<InvoiceDTO> responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        InvoiceDTO responseInvoice = responseMessage.getData();
+        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        InvoiceDTO responseInvoice = responsePayload.getData();
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertTrue(isSuccess);
@@ -135,13 +137,13 @@ class InvoiceControllerTest {
         given(this.invoiceService.getInvoiceById(11L)).willReturn(null);
 
         // when
-        ResponseEntity<ResponseMessage<InvoiceDTO>> responseEntity = this.invoiceController.getInvoiceById(11L);
+        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.getInvoiceById(11L);
 
         // then
-        ResponseMessage<InvoiceDTO> responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert  responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        InvoiceDTO responseInvoice = responseMessage.getData();
+        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert  responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        InvoiceDTO responseInvoice = responsePayload.getData();
 
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -156,13 +158,13 @@ class InvoiceControllerTest {
         given(this.invoiceService.getAllInvoiceByVendorId(1L)).willReturn(List.of(invoiceDTO1, invoiceDTO2));
 
         // when
-        ResponseEntity<ResponseMessage<List<InvoiceDTO>>> responseEntity = this.invoiceController.getAllInvoiceByVendorId(1L);
+        ResponseEntity<ResponsePayload<List<InvoiceDTO>>> responseEntity = this.invoiceController.getAllInvoiceByVendorId(1L);
 
         // then
-        ResponseMessage<List<InvoiceDTO>> responseMessage = (ResponseMessage<List<InvoiceDTO>>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        List<InvoiceDTO> responseInvoices = responseMessage.getData();
+        ResponsePayload<List<InvoiceDTO>> responsePayload = (ResponsePayload<List<InvoiceDTO>>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        List<InvoiceDTO> responseInvoices = responsePayload.getData();
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertTrue(isSuccess);
@@ -178,13 +180,13 @@ class InvoiceControllerTest {
         given(this.invoiceService.getAllInvoiceByVendorId(1L)).willReturn(List.of());
 
         // when
-        ResponseEntity<ResponseMessage<List<InvoiceDTO>>> responseEntity = this.invoiceController.getAllInvoiceByVendorId(1L);
+        ResponseEntity<ResponsePayload<List<InvoiceDTO>>> responseEntity = this.invoiceController.getAllInvoiceByVendorId(1L);
 
         // then
-        ResponseMessage<List<InvoiceDTO>> responseMessage = (ResponseMessage<List<InvoiceDTO>>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        List<InvoiceDTO> responseInvoices = responseMessage.getData();
+        ResponsePayload<List<InvoiceDTO>> responsePayload = (ResponsePayload<List<InvoiceDTO>>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        List<InvoiceDTO> responseInvoices = responsePayload.getData();
 
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -195,8 +197,8 @@ class InvoiceControllerTest {
     @Test
     void createInvoiceWhenDataNotProvided() {
 
-        ResponseEntity<ResponseMessage<InvoiceDTO>> responseEntity;
-        ResponseMessage<InvoiceDTO> responseMessage;
+        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity;
+        ResponsePayload<InvoiceDTO> responsePayload;
         /**
          * Vendor not provided
          */
@@ -207,9 +209,9 @@ class InvoiceControllerTest {
         responseEntity = this.invoiceController.createInvoice(newInvoice);
 
         // then
-        responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
+        responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -227,9 +229,9 @@ class InvoiceControllerTest {
         responseEntity = this.invoiceController.createInvoice(newInvoice);
 
         // then
-        responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert responseMessage != null;
-        isSuccess = responseMessage.isSuccess();
+        responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert responsePayload != null;
+        isSuccess = responsePayload.isSuccess();
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -243,8 +245,8 @@ class InvoiceControllerTest {
     @Test
     void createInvoiceWhenInvalidDataProvided() {
 
-        ResponseEntity<ResponseMessage<InvoiceDTO>> responseEntity;
-        ResponseMessage<InvoiceDTO> responseMessage;
+        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity;
+        ResponsePayload<InvoiceDTO> responsePayload;
         /**
          * Invalid vendor provided
          */
@@ -257,10 +259,10 @@ class InvoiceControllerTest {
         responseEntity = this.invoiceController.createInvoice(newInvoice);
 
         // then
-        responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        InvoiceDTO responseInvoice = responseMessage.getData();
+        responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        InvoiceDTO responseInvoice = responsePayload.getData();
 
         assertNull(responseInvoice);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
@@ -282,10 +284,10 @@ class InvoiceControllerTest {
         responseEntity = this.invoiceController.createInvoice(newInvoice);
 
         // then
-        responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert responseMessage != null;
-        isSuccess = responseMessage.isSuccess();
-        responseInvoice = responseMessage.getData();
+        responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert responsePayload != null;
+        isSuccess = responsePayload.isSuccess();
+        responseInvoice = responsePayload.getData();
 
         assertNull(responseInvoice);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
@@ -315,13 +317,13 @@ class InvoiceControllerTest {
         given(this.invoiceService.createInvoice(newInvoice)).willReturn(newInvoice);
 
         // when
-        ResponseEntity<ResponseMessage<InvoiceDTO>> responseEntity = this.invoiceController.createInvoice(newInvoice);
+        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.createInvoice(newInvoice);
 
         // then
-        ResponseMessage<InvoiceDTO> responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        InvoiceDTO createdInvoice = responseMessage.getData();
+        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        InvoiceDTO createdInvoice = responsePayload.getData();
 
         assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
         assertTrue(isSuccess);
@@ -342,13 +344,13 @@ class InvoiceControllerTest {
         given(this.invoiceService.createInvoice(newInvoice)).willThrow(new DataIntegrityViolationException(""));
 
         // when
-        ResponseEntity<ResponseMessage<InvoiceDTO>> responseEntity = this.invoiceController.createInvoice(newInvoice);
+        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.createInvoice(newInvoice);
 
         // then
-        ResponseMessage<InvoiceDTO> responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        InvoiceDTO createdInvoice = responseMessage.getData();
+        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        InvoiceDTO createdInvoice = responsePayload.getData();
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -370,13 +372,13 @@ class InvoiceControllerTest {
         given(this.invoiceService.createInvoice(newInvoice)).willThrow(new RuntimeException(""));
 
         // when
-        ResponseEntity<ResponseMessage<InvoiceDTO>> responseEntity = this.invoiceController.createInvoice(newInvoice);
+        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.createInvoice(newInvoice);
 
         // then
-        ResponseMessage<InvoiceDTO> responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        InvoiceDTO createdInvoice = responseMessage.getData();
+        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        InvoiceDTO createdInvoice = responsePayload.getData();
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -393,8 +395,8 @@ class InvoiceControllerTest {
     @Test
     void updateInvoiceWhenDataNotProvided() {
 
-        ResponseEntity<ResponseMessage<InvoiceDTO>> responseEntity;
-        ResponseMessage<InvoiceDTO> responseMessage;
+        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity;
+        ResponsePayload<InvoiceDTO> responsePayload;
         /**
          * Vendor not provided
          */
@@ -405,9 +407,9 @@ class InvoiceControllerTest {
         responseEntity = this.invoiceController.updateInvoice(updatedInvoice.getId(), updatedInvoice);
 
         // then
-        responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
+        responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -425,9 +427,9 @@ class InvoiceControllerTest {
         responseEntity = this.invoiceController.updateInvoice(updatedInvoice.getId(), updatedInvoice);
 
         // then
-        responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert responseMessage != null;
-        isSuccess = responseMessage.isSuccess();
+        responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert responsePayload != null;
+        isSuccess = responsePayload.isSuccess();
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -441,8 +443,8 @@ class InvoiceControllerTest {
     @Test
     void updateInvoiceWhenInvalidDataProvided() {
 
-        ResponseEntity<ResponseMessage<InvoiceDTO>> responseEntity;
-        ResponseMessage<InvoiceDTO> responseMessage;
+        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity;
+        ResponsePayload<InvoiceDTO> responsePayload;
         /**
          * Invalid vendor provided
          */
@@ -455,10 +457,10 @@ class InvoiceControllerTest {
         responseEntity = this.invoiceController.updateInvoice(updatedInvoice.getId(), updatedInvoice);
 
         // then
-        responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        InvoiceDTO responseInvoice = responseMessage.getData();
+        responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        InvoiceDTO responseInvoice = responsePayload.getData();
 
         assertNull(responseInvoice);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
@@ -480,10 +482,10 @@ class InvoiceControllerTest {
         responseEntity = this.invoiceController.updateInvoice(updatedInvoice.getId(), updatedInvoice);
 
         // then
-        responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert responseMessage != null;
-        isSuccess = responseMessage.isSuccess();
-        responseInvoice = responseMessage.getData();
+        responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert responsePayload != null;
+        isSuccess = responsePayload.isSuccess();
+        responseInvoice = responsePayload.getData();
 
         assertNull(responseInvoice);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
@@ -513,13 +515,13 @@ class InvoiceControllerTest {
         given(this.invoiceService.updateInvoice(updatedInvoice.getId(), updatedInvoice)).willReturn(updatedInvoice);
 
         // when
-        ResponseEntity<ResponseMessage<InvoiceDTO>> responseEntity = this.invoiceController.updateInvoice(updatedInvoice.getId(), updatedInvoice);
+        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.updateInvoice(updatedInvoice.getId(), updatedInvoice);
 
         // then
-        ResponseMessage<InvoiceDTO> responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        InvoiceDTO responseUpdatedInvoice = responseMessage.getData();
+        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        InvoiceDTO responseUpdatedInvoice = responsePayload.getData();
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertTrue(isSuccess);
@@ -540,13 +542,13 @@ class InvoiceControllerTest {
         given(this.invoiceService.updateInvoice(updatedInvoice.getId(), updatedInvoice)).willThrow(new DataIntegrityViolationException(""));
 
         // when
-        ResponseEntity<ResponseMessage<InvoiceDTO>> responseEntity = this.invoiceController.updateInvoice(updatedInvoice.getId(), updatedInvoice);
+        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.updateInvoice(updatedInvoice.getId(), updatedInvoice);
 
         // then
-        ResponseMessage<InvoiceDTO> responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        InvoiceDTO responseUpdatedInvoice = responseMessage.getData();
+        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        InvoiceDTO responseUpdatedInvoice = responsePayload.getData();
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -568,13 +570,13 @@ class InvoiceControllerTest {
         given(this.invoiceService.updateInvoice(updatedInvoice.getId(), updatedInvoice)).willThrow(new RuntimeException(""));
 
         // when
-        ResponseEntity<ResponseMessage<InvoiceDTO>> responseEntity = this.invoiceController.updateInvoice(updatedInvoice.getId(), updatedInvoice);
+        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.updateInvoice(updatedInvoice.getId(), updatedInvoice);
 
         // then
-        ResponseMessage<InvoiceDTO> responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        InvoiceDTO responseUpdatedInvoice = responseMessage.getData();
+        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        InvoiceDTO responseUpdatedInvoice = responsePayload.getData();
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -593,12 +595,12 @@ class InvoiceControllerTest {
 
 
         // when
-        ResponseEntity<ResponseMessage<InvoiceDTO>> responseEntity = this.invoiceController.deleteInvoice(invoiceDTO1.getId());
+        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.deleteInvoice(invoiceDTO1.getId());
 
         // then
-        ResponseMessage<InvoiceDTO> responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
+        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
         assertTrue(isSuccess);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         verify(this.invoiceService, times(1)).getInvoiceById(invoiceDTO1.getId());
@@ -617,12 +619,12 @@ class InvoiceControllerTest {
 
 
         // when
-        ResponseEntity<ResponseMessage<InvoiceDTO>> responseEntity = this.invoiceController.deleteInvoice(invoiceDTO1.getId());
+        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.deleteInvoice(invoiceDTO1.getId());
 
         // then
-        ResponseMessage<InvoiceDTO> responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
+        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
         assertFalse(isSuccess);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         verify(this.invoiceService, times(1)).getInvoiceById(invoiceDTO1.getId());
@@ -637,12 +639,12 @@ class InvoiceControllerTest {
 
 
         // when
-        ResponseEntity<ResponseMessage<InvoiceDTO>> responseEntity = this.invoiceController.deleteInvoice(invoiceDTO1.getId());
+        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.deleteInvoice(invoiceDTO1.getId());
 
         // then
-        ResponseMessage<InvoiceDTO> responseMessage = (ResponseMessage<InvoiceDTO>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
+        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
         assertFalse(isSuccess);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         verify(this.invoiceService, times(1)).getInvoiceById(invoiceDTO1.getId());

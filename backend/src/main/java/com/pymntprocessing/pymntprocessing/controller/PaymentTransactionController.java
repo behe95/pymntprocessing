@@ -2,8 +2,10 @@ package com.pymntprocessing.pymntprocessing.controller;
 
 import com.pymntprocessing.pymntprocessing.constant.ApiConstants;
 import com.pymntprocessing.pymntprocessing.constant.db.TransactionTypeValue;
-import com.pymntprocessing.pymntprocessing.dto.PaymentTransactionDTO;
-import com.pymntprocessing.pymntprocessing.entity.*;
+import com.pymntprocessing.pymntprocessing.model.dto.PaymentTransactionDTO;
+import com.pymntprocessing.pymntprocessing.model.entity.ResponsePayload;
+import com.pymntprocessing.pymntprocessing.model.entity.TransactionType;
+import com.pymntprocessing.pymntprocessing.model.entity.Vendor;
 import com.pymntprocessing.pymntprocessing.service.PaymentTransactionService;
 import com.pymntprocessing.pymntprocessing.service.VendorService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,54 +31,54 @@ public class PaymentTransactionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseMessage<PaymentTransactionDTO>> getPaymentTransactionById(@PathVariable Long id) {
+    public ResponseEntity<ResponsePayload<PaymentTransactionDTO>> getPaymentTransactionById(@PathVariable Long id) {
         PaymentTransactionDTO paymentTransactionDTO = this.paymentTransactionService.getPaymentTransactionById(id);
 
         if (paymentTransactionDTO != null) {
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(new ResponseMessage<>(paymentTransactionDTO, true, ""));
+                    .body(new ResponsePayload<>(paymentTransactionDTO, true, ""));
         }
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(new ResponseMessage<>(null, false, "Payment transaction not found!"));
+                .body(new ResponsePayload<>(null, false, "Payment transaction not found!"));
     }
 
     @GetMapping
-    public ResponseEntity<ResponseMessage<List<PaymentTransactionDTO>>> getAllPaymentTransaction() {
+    public ResponseEntity<ResponsePayload<List<PaymentTransactionDTO>>> getAllPaymentTransaction() {
         List<PaymentTransactionDTO> paymentTransactionDTOS = this.paymentTransactionService.getAllPaymentTransaction();
 
         if (paymentTransactionDTOS.isEmpty()) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseMessage<List<PaymentTransactionDTO>>(paymentTransactionDTOS, false, "Payment transactions not found!"));
+                    .body(new ResponsePayload<List<PaymentTransactionDTO>>(paymentTransactionDTOS, false, "Payment transactions not found!"));
 
         }
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new ResponseMessage<List<PaymentTransactionDTO>>(paymentTransactionDTOS, true, ""));
+                .body(new ResponsePayload<List<PaymentTransactionDTO>>(paymentTransactionDTOS, true, ""));
 
     }
 
     @GetMapping("/vendor/{vendorId}")
-    public ResponseEntity<ResponseMessage<List<PaymentTransactionDTO>>> getAllPaymentTransactionByVendorId(@PathVariable("vendorId") Long id) {
+    public ResponseEntity<ResponsePayload<List<PaymentTransactionDTO>>> getAllPaymentTransactionByVendorId(@PathVariable("vendorId") Long id) {
         List<PaymentTransactionDTO> paymentTransactionDTOS = this.paymentTransactionService.getAllPaymentTransactionByVendorId(id);
 
         if (paymentTransactionDTOS.isEmpty()) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseMessage<List<PaymentTransactionDTO>>(paymentTransactionDTOS, false, "Vendor doesn't have any payment transaction!"));
+                    .body(new ResponsePayload<List<PaymentTransactionDTO>>(paymentTransactionDTOS, false, "Vendor doesn't have any payment transaction!"));
         }
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new ResponseMessage<List<PaymentTransactionDTO>>(paymentTransactionDTOS, true, ""));
+                .body(new ResponsePayload<List<PaymentTransactionDTO>>(paymentTransactionDTOS, true, ""));
     }
 
     @PostMapping
-    public ResponseEntity<ResponseMessage<PaymentTransactionDTO>> createPaymentTransaction(@RequestBody PaymentTransactionDTO paymentTransactionDTO) {
+    public ResponseEntity<ResponsePayload<PaymentTransactionDTO>> createPaymentTransaction(@RequestBody PaymentTransactionDTO paymentTransactionDTO) {
         Vendor vendor = paymentTransactionDTO.getVendor();
 //        TransactionStatus transactionStatus = paymentTransaction.getTransactionStatus();
         TransactionType transactionType = paymentTransactionDTO.getTransactionType();
@@ -103,7 +105,7 @@ public class PaymentTransactionController {
         if (invalidRequestBody) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
 
         /**
@@ -117,7 +119,7 @@ public class PaymentTransactionController {
             errorMessage = "Invalid vendor provided!";
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
 
 //        /**
@@ -129,7 +131,7 @@ public class PaymentTransactionController {
 //            errorMessage = "Invalid transaction status provided!";
 //            return ResponseEntity
 //                    .status(HttpStatus.BAD_REQUEST)
-//                    .body(new ResponseMessage<>(null, false, errorMessage));
+//                    .body(new ResponsePayload<>(null, false, errorMessage));
 //        }
 
         /**
@@ -143,14 +145,14 @@ public class PaymentTransactionController {
             errorMessage = "Invalid transaction type provided!";
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
 
         try {
             PaymentTransactionDTO newPaymentTransactionDTO = this.paymentTransactionService.createPaymentTransaction(paymentTransactionDTO);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .body(new ResponseMessage<>(newPaymentTransactionDTO, true, "Payment transaction created!"));
+                    .body(new ResponsePayload<>(newPaymentTransactionDTO, true, "Payment transaction created!"));
         } catch (DataIntegrityViolationException e) {
             errorMessage = "ERROR: Duplicate entry!";
             if (e.getRootCause() != null) {
@@ -158,19 +160,19 @@ public class PaymentTransactionController {
             }
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         } catch (Exception ex) {
             errorMessage = "ERROR: Internal Server Error! " + ex.getMessage();
 
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
 
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseMessage<PaymentTransactionDTO>> updatePaymentTransaction(@PathVariable Long id, @RequestBody PaymentTransactionDTO paymentTransactionDTO) {
+    public ResponseEntity<ResponsePayload<PaymentTransactionDTO>> updatePaymentTransaction(@PathVariable Long id, @RequestBody PaymentTransactionDTO paymentTransactionDTO) {
 
         Vendor vendor = paymentTransactionDTO.getVendor();
 //        TransactionStatus transactionStatus = paymentTransaction.getTransactionStatus();
@@ -198,7 +200,7 @@ public class PaymentTransactionController {
         if (invalidRequestBody) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
 
         /**
@@ -212,7 +214,7 @@ public class PaymentTransactionController {
             errorMessage = "Invalid vendor provided!";
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
 
 //        /**
@@ -227,7 +229,7 @@ public class PaymentTransactionController {
 //            errorMessage = "Unable to update transaction. Transaction status: " + transactionStatus.getName();
 //            return ResponseEntity
 //                    .status(HttpStatus.BAD_REQUEST)
-//                    .body(new ResponseMessage<>(null, false, errorMessage));
+//                    .body(new ResponsePayload<>(null, false, errorMessage));
 //        }
 
         /**
@@ -241,14 +243,14 @@ public class PaymentTransactionController {
             errorMessage = "Invalid transaction type provided!";
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
 
         try {
             PaymentTransactionDTO updatedPaymentTransactionDTO = this.paymentTransactionService.updatePaymentTransaction(id, paymentTransactionDTO);
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(new ResponseMessage<>(updatedPaymentTransactionDTO, true, "Payment transaction has been updated!"));
+                    .body(new ResponsePayload<>(updatedPaymentTransactionDTO, true, "Payment transaction has been updated!"));
         } catch (DataIntegrityViolationException e) {
             errorMessage = "ERROR: Duplicate entry!";
             if (e.getRootCause() != null) {
@@ -256,26 +258,26 @@ public class PaymentTransactionController {
             }
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         } catch (Exception ex) {
             errorMessage = "ERROR: Internal Server Error! " + ex.getMessage();
 
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseMessage<>(null, false, errorMessage));
+                    .body(new ResponsePayload<>(null, false, errorMessage));
         }
     }
 
 
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseMessage<PaymentTransactionDTO>> deletePaymentTransaction(@PathVariable Long id) {
+    public ResponseEntity<ResponsePayload<PaymentTransactionDTO>> deletePaymentTransaction(@PathVariable Long id) {
         PaymentTransactionDTO paymentTransactionDTO = this.paymentTransactionService.getPaymentTransactionById(id);
 
         if (paymentTransactionDTO == null) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseMessage<>(null, false, "Invalid id provided"));
+                    .body(new ResponsePayload<>(null, false, "Invalid id provided"));
         }
 
 //        TransactionStatus transactionStatus = paymentTransaction.getTransactionStatus();
@@ -294,12 +296,12 @@ public class PaymentTransactionController {
 //
 //            return ResponseEntity
 //                    .status(HttpStatus.BAD_REQUEST)
-//                    .body(new ResponseMessage<>(null, false, errorMessage));
+//                    .body(new ResponsePayload<>(null, false, errorMessage));
 //        }
 
         this.paymentTransactionService.deletePaymentTransaction(id);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new ResponseMessage<>(null, true, "Transaction " + paymentTransactionDTO.getTransactionNumber() + " has been deleted"));
+                .body(new ResponsePayload<>(null, true, "Transaction " + paymentTransactionDTO.getTransactionNumber() + " has been deleted"));
     }
 }

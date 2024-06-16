@@ -1,10 +1,9 @@
 package com.pymntprocessing.pymntprocessing.service;
 
-import com.pymntprocessing.pymntprocessing.dto.InvoiceDTO;
-import com.pymntprocessing.pymntprocessing.dto.PaymentTransactionConverter;
-import com.pymntprocessing.pymntprocessing.dto.PaymentTransactionDTO;
-import com.pymntprocessing.pymntprocessing.entity.PaymentTransaction;
-import com.pymntprocessing.pymntprocessing.entity.TransactionType;
+import com.pymntprocessing.pymntprocessing.model.mapper.PaymentTransactionMapper;
+import com.pymntprocessing.pymntprocessing.model.dto.PaymentTransactionDTO;
+import com.pymntprocessing.pymntprocessing.model.entity.PaymentTransaction;
+import com.pymntprocessing.pymntprocessing.model.entity.TransactionType;
 import com.pymntprocessing.pymntprocessing.repository.PaymentTransactionRepository;
 import com.pymntprocessing.pymntprocessing.repository.TransactionTypeRepository;
 import org.modelmapper.ModelMapper;
@@ -22,41 +21,34 @@ public class PaymentTransactionImpl implements PaymentTransactionService{
 
     private final ModelMapper modelMapper;
 
-    private final PaymentTransactionConverter paymentTransactionConverter;
+    private final PaymentTransactionMapper paymentTransactionMapper;
 
     @Autowired
-    public PaymentTransactionImpl(PaymentTransactionRepository paymentTransactionRepository, TransactionTypeRepository transactionTypeRepository, ModelMapper modelMapper, PaymentTransactionConverter paymentTransactionConverter) {
+    public PaymentTransactionImpl(PaymentTransactionRepository paymentTransactionRepository, TransactionTypeRepository transactionTypeRepository, ModelMapper modelMapper, PaymentTransactionMapper paymentTransactionMapper) {
         this.paymentTransactionRepository = paymentTransactionRepository;
         this.transactionTypeRepository = transactionTypeRepository;
         this.modelMapper = modelMapper;
-        this.paymentTransactionConverter = paymentTransactionConverter;
+        this.paymentTransactionMapper = paymentTransactionMapper;
     }
 
     @Override
     public PaymentTransactionDTO getPaymentTransactionById(Long id) {
-        Optional<PaymentTransaction> paymentTransaction = this.paymentTransactionRepository.findById(id);
-        PaymentTransactionDTO paymentTransactionDTO = null;
-
-        if (paymentTransaction.isPresent()) {
-            paymentTransactionDTO = this.paymentTransactionConverter.toDTO(paymentTransaction.get());
-        }
-
-        return paymentTransactionDTO;
+        return this.paymentTransactionRepository.findById(id).map(this.paymentTransactionMapper::convertToDTO).orElse(null);
     }
 
     @Override
     public List<PaymentTransactionDTO> getAllPaymentTransaction() {
-        return this.paymentTransactionRepository.findAll().stream().map(paymentTransactionConverter::toDTO).toList();
+        return this.paymentTransactionRepository.findAll().stream().map(paymentTransactionMapper::convertToDTO).toList();
     }
 
     @Override
     public List<PaymentTransactionDTO> getAllPaymentTransactionByVendorId(Long id) {
-        return this.paymentTransactionRepository.findAllByVendorId(id).stream().map(paymentTransactionConverter::toDTO).toList();
+        return this.paymentTransactionRepository.findAllByVendorId(id).stream().map(paymentTransactionMapper::convertToDTO).toList();
     }
 
     @Override
     public PaymentTransactionDTO createPaymentTransaction(PaymentTransactionDTO paymentTransactionDTO) {
-        return paymentTransactionConverter.toDTO(this.paymentTransactionRepository.save(this.paymentTransactionConverter.toEntity(paymentTransactionDTO)));
+        return paymentTransactionMapper.convertToDTO(this.paymentTransactionRepository.save(this.paymentTransactionMapper.convertToEntity(paymentTransactionDTO)));
     }
 
 
@@ -71,7 +63,7 @@ public class PaymentTransactionImpl implements PaymentTransactionService{
 
         Optional<PaymentTransaction> existingPaymentTransaction = this.paymentTransactionRepository.findById(id);
         if (existingPaymentTransaction.isPresent()) {
-            return this.paymentTransactionConverter.toDTO(this.paymentTransactionRepository.save(this.paymentTransactionConverter.toEntity(paymentTransactionDTO)));
+            return this.paymentTransactionMapper.convertToDTO(this.paymentTransactionRepository.save(this.paymentTransactionMapper.convertToEntity(paymentTransactionDTO)));
         }
         return null;
     }

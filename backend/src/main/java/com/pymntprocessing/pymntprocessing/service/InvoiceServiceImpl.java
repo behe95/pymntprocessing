@@ -1,10 +1,11 @@
 package com.pymntprocessing.pymntprocessing.service;
 
-import com.pymntprocessing.pymntprocessing.dto.InvoiceConverter;
-import com.pymntprocessing.pymntprocessing.dto.InvoiceDTO;
-import com.pymntprocessing.pymntprocessing.dto.PaymentTransactionDTO;
-import com.pymntprocessing.pymntprocessing.entity.Invoice;
-import com.pymntprocessing.pymntprocessing.entity.InvoiceStatus;
+import com.pymntprocessing.pymntprocessing.model.mapper.InvoiceMapper;
+import com.pymntprocessing.pymntprocessing.model.dto.InvoiceDTO;
+import com.pymntprocessing.pymntprocessing.model.dto.PaymentTransactionDTO;
+import com.pymntprocessing.pymntprocessing.model.entity.Invoice;
+import com.pymntprocessing.pymntprocessing.model.entity.InvoiceStatus;
+import com.pymntprocessing.pymntprocessing.model.mapper.PaymentTransactionMapper;
 import com.pymntprocessing.pymntprocessing.repository.InvoiceRepository;
 import com.pymntprocessing.pymntprocessing.repository.InvoiceStatusRepository;
 import org.modelmapper.ModelMapper;
@@ -22,14 +23,16 @@ public class InvoiceServiceImpl implements InvoiceService{
 
     private final ModelMapper modelMapper;
 
-    private final InvoiceConverter invoiceConverter;
+    private final InvoiceMapper invoiceMapper;
+    private final PaymentTransactionMapper paymentTransactionMapper;
 
     @Autowired
-    public InvoiceServiceImpl(InvoiceRepository paymentTransactionRepository, InvoiceStatusRepository invoiceStatusRepository, ModelMapper modelMapper, InvoiceConverter invoiceConverter) {
+    public InvoiceServiceImpl(InvoiceRepository paymentTransactionRepository, InvoiceStatusRepository invoiceStatusRepository, ModelMapper modelMapper, InvoiceMapper invoiceMapper, PaymentTransactionMapper paymentTransactionMapper) {
         this.invoiceRepository = paymentTransactionRepository;
         this.invoiceStatusRepository = invoiceStatusRepository;
         this.modelMapper = modelMapper;
-        this.invoiceConverter = invoiceConverter;
+        this.invoiceMapper = invoiceMapper;
+        this.paymentTransactionMapper = paymentTransactionMapper;
     }
 
 
@@ -40,8 +43,8 @@ public class InvoiceServiceImpl implements InvoiceService{
 
         if (invoice.isPresent()) {
             invoiceDTO = this.modelMapper.map(invoice.get(), InvoiceDTO.class);
-            List<PaymentTransactionDTO> paymentTransactionDTOS = invoice.get().getPaymentTransaction().stream().map(paymentTransaction -> this.modelMapper.map(paymentTransaction, PaymentTransactionDTO.class)).toList();
-            invoiceDTO.setPaymentTransactionDTO(paymentTransactionDTOS);
+            invoiceDTO.setPaymentTransactionDTO(this.paymentTransactionMapper.convertToDTOList(invoice.get().getPaymentTransaction()));
+
         }
         System.out.println(invoiceDTO);
 
@@ -50,17 +53,17 @@ public class InvoiceServiceImpl implements InvoiceService{
 
     @Override
     public List<InvoiceDTO> getAllInvoice() {
-        return this.invoiceRepository.findAll().stream().map(this.invoiceConverter::toDTO).toList();
+        return this.invoiceRepository.findAll().stream().map(this.invoiceMapper::convertToDTO).toList();
     }
 
     @Override
     public List<InvoiceDTO> getAllInvoiceByVendorId(Long id) {
-        return this.invoiceRepository.findAllByVendorId(id).stream().map(this.invoiceConverter::toDTO).toList();
+        return this.invoiceRepository.findAllByVendorId(id).stream().map(this.invoiceMapper::convertToDTO).toList();
     }
 
     @Override
     public InvoiceDTO createInvoice(InvoiceDTO invoiceDTO) {
-        return this.invoiceConverter.toDTO(this.invoiceRepository.save(this.invoiceConverter.toEntity(invoiceDTO)));
+        return this.invoiceMapper.convertToDTO(this.invoiceRepository.save(this.invoiceMapper.convertToEntity(invoiceDTO)));
     }
 
     @Override
@@ -75,7 +78,7 @@ public class InvoiceServiceImpl implements InvoiceService{
 
         Optional<Invoice> existingInvoice = this.invoiceRepository.findById(id);
         if (existingInvoice.isPresent()) {
-            return this.invoiceConverter.toDTO(this.invoiceRepository.save(this.invoiceConverter.toEntity(invoiceDTO)));
+            return this.invoiceMapper.convertToDTO(this.invoiceRepository.save(this.invoiceMapper.convertToEntity(invoiceDTO)));
         }
         return null;
     }

@@ -1,25 +1,23 @@
 package com.pymntprocessing.pymntprocessing.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
-import com.pymntprocessing.pymntprocessing.dto.PaymentTransactionDTO;
-import com.pymntprocessing.pymntprocessing.dto.ProductDTO;
-import com.pymntprocessing.pymntprocessing.entity.*;
+import com.pymntprocessing.pymntprocessing.model.dto.PaymentTransactionDTO;
+import com.pymntprocessing.pymntprocessing.model.dto.ProductDTO;
+import com.pymntprocessing.pymntprocessing.model.entity.ResponsePayload;
+import com.pymntprocessing.pymntprocessing.model.entity.TransactionType;
+import com.pymntprocessing.pymntprocessing.model.entity.Vendor;
 import com.pymntprocessing.pymntprocessing.service.PaymentTransactionService;
 import com.pymntprocessing.pymntprocessing.service.ProductService;
-import com.sun.istack.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -33,12 +31,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -266,7 +261,7 @@ class ProductControllerTest {
         returnProductDTO.setModified(newProductDTO.getModified());
 
         String expectedReturnJSON = this.objectMapper.writeValueAsString(
-            new ResponseMessage<ProductDTO>(returnProductDTO, true, "Product created!")
+            new ResponsePayload<ProductDTO>(returnProductDTO, true, "Product created!")
         );
 
 
@@ -324,7 +319,7 @@ class ProductControllerTest {
         returnProductDTO.setModified(newProductDTO.getModified());
 
         String expectedReturnJSON = this.objectMapper.writeValueAsString(
-                new ResponseMessage<ProductDTO>(returnProductDTO, true, "Product created!")
+                new ResponsePayload<ProductDTO>(returnProductDTO, true, "Product created!")
         );
 
 
@@ -451,7 +446,7 @@ class ProductControllerTest {
 
 
         String expectedReturnJSON = this.objectMapper.writeValueAsString(
-                new ResponseMessage<ProductDTO>(null, false, "ERROR: Internal Server Error! Additional error message")
+                new ResponsePayload<ProductDTO>(null, false, "ERROR: Internal Server Error! Additional error message")
         );
 
         // given
@@ -478,7 +473,7 @@ class ProductControllerTest {
     void updateProductWithNoIdProvided() throws Exception {
         productDTO1.setId(null);
 
-        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponseMessage<>(null, false, "Product id not provided!"));
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(null, false, "Product id not provided!"));
         String requestBody = this.objectMapper.writeValueAsString(productDTO1);
 
         // when
@@ -500,7 +495,7 @@ class ProductControllerTest {
     void updateProductWhenProductNotExist() throws Exception {
         productDTO1.setId(1L);
 
-        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponseMessage<>(null, false, "Product doesn't exist!"));
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(null, false, "Product doesn't exist!"));
         String requestBody = this.objectMapper.writeValueAsString(productDTO1);
 
         // given
@@ -529,7 +524,7 @@ class ProductControllerTest {
         paymentTransactionDTO2.setProductDTO(productDTO2);
         productDTO1.setPaymentTransactionDTO(paymentTransactionDTO2);
 
-        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponseMessage<>(null, false,
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(null, false,
                 "Unable to assign payment transaction " + paymentTransactionDTO2.getTransactionNumber() + " to Product " + productDTO1.getProductName()));
         String requestBody = this.objectMapper.writeValueAsString(productDTO1);
 
@@ -579,7 +574,7 @@ class ProductControllerTest {
         productDTO1.setPaymentTransactionDTO(paymentTransactionDTO2);
 
 
-        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponseMessage<>(productDTO1, true,"Product updated!"));
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(productDTO1, true,"Product updated!"));
         String requestBody = this.objectMapper.writeValueAsString(productDTO1);
 
 
@@ -630,7 +625,7 @@ class ProductControllerTest {
         productDTO1.setPaymentTransactionDTO(paymentTransactionDTO2);
 
 
-        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponseMessage<>(null, false,"ERROR: Duplicate entry!"));
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(null, false,"ERROR: Duplicate entry!"));
         String requestBody = this.objectMapper.writeValueAsString(productDTO1);
 
 
@@ -682,7 +677,7 @@ class ProductControllerTest {
 
 
         String expectedReturnJSON = this.objectMapper.writeValueAsString(
-                new ResponseMessage<ProductDTO>(null, false, "ERROR: Internal Server Error! Additional error message")
+                new ResponsePayload<ProductDTO>(null, false, "ERROR: Internal Server Error! Additional error message")
         );
         String requestBody = this.objectMapper.writeValueAsString(productDTO1);
 
@@ -734,7 +729,7 @@ class ProductControllerTest {
         productDTO1.setPaymentTransactionDTO(paymentTransactionDTO2);
 
 
-        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponseMessage<>(null, false,"Product doesn't exist!"));
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(null, false,"Product doesn't exist!"));
 
 
         // given
@@ -765,7 +760,7 @@ class ProductControllerTest {
         productDTO1.setPaymentTransactionDTO(paymentTransactionDTO2);
 
 
-        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponseMessage<>(null, true,"Product " + productDTO1.getProductName() + " has been deleted"));
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(null, true,"Product " + productDTO1.getProductName() + " has been deleted"));
 
         ProductDTO existingProductDTO = new ProductDTO();
         existingProductDTO.setId(1L);

@@ -1,7 +1,7 @@
 package com.pymntprocessing.pymntprocessing.controller;
 
-import com.pymntprocessing.pymntprocessing.entity.ResponseMessage;
-import com.pymntprocessing.pymntprocessing.entity.Vendor;
+import com.pymntprocessing.pymntprocessing.model.entity.ResponsePayload;
+import com.pymntprocessing.pymntprocessing.model.entity.Vendor;
 import com.pymntprocessing.pymntprocessing.service.VendorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,13 +52,13 @@ class VendorControllerTest {
         given(this.vendorService.getVendorById(1L)).willReturn(vendor1);
 
         // when
-        ResponseEntity<ResponseMessage<Vendor>> responseEntity = this.vendorController.getVendorById(1L);
+        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.getVendorById(1L);
 
         // then
-        ResponseMessage<Vendor> responseMessage = (ResponseMessage<Vendor>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        Vendor responseVendor = responseMessage.getData();
+        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        Vendor responseVendor = responsePayload.getData();
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertTrue(isSuccess);
@@ -73,13 +73,13 @@ class VendorControllerTest {
         given(this.vendorService.getVendorById(11L)).willReturn(null);
 
         // when
-        ResponseEntity<ResponseMessage<Vendor>> responseEntity = this.vendorController.getVendorById(11L);
+        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.getVendorById(11L);
 
         // then
-        ResponseMessage<Vendor> responseMessage = (ResponseMessage<Vendor>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        Vendor responseVendor = responseMessage.getData();
+        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        Vendor responseVendor = responsePayload.getData();
 
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -94,13 +94,13 @@ class VendorControllerTest {
         given(this.vendorService.getAllVendors()).willReturn(List.of(vendor1, vendor2));
 
         // when
-        ResponseEntity<ResponseMessage<List<Vendor>>> responseEntity = this.vendorController.getAllVendors();
+        ResponseEntity<ResponsePayload<List<Vendor>>> responseEntity = this.vendorController.getAllVendors();
 
         // then
-        ResponseMessage<List<Vendor>> responseMessage = (ResponseMessage<List<Vendor>>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        List<Vendor> vendors = responseMessage.getData();
+        ResponsePayload<List<Vendor>> responsePayload = (ResponsePayload<List<Vendor>>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        List<Vendor> vendors = responsePayload.getData();
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertTrue(isSuccess);
@@ -113,13 +113,13 @@ class VendorControllerTest {
         given(this.vendorService.getAllVendors()).willReturn(List.of());
 
         // when
-        ResponseEntity<ResponseMessage<List<Vendor>>> responseEntity = this.vendorController.getAllVendors();
+        ResponseEntity<ResponsePayload<List<Vendor>>> responseEntity = this.vendorController.getAllVendors();
 
         // then
-        ResponseMessage<List<Vendor>> responseMessage = (ResponseMessage<List<Vendor>>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        List<Vendor> vendors = responseMessage.getData();
+        ResponsePayload<List<Vendor>> responsePayload = (ResponsePayload<List<Vendor>>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        List<Vendor> vendors = responsePayload.getData();
 
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -143,13 +143,13 @@ class VendorControllerTest {
         given(this.vendorService.createVendor(vendor)).willReturn(vendor);
 
         // when
-        ResponseEntity<ResponseMessage<Vendor>> responseEntity = this.vendorController.createVendor(vendor);
+        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.createVendor(vendor);
 
         // then
-        ResponseMessage<Vendor> responseMessage = (ResponseMessage<Vendor>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        Vendor createdVendor = responseMessage.getData();
+        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        Vendor createdVendor = responsePayload.getData();
 
         assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
         assertTrue(isSuccess);
@@ -170,13 +170,13 @@ class VendorControllerTest {
         given(this.vendorService.createVendor(vendor)).willThrow(new DataIntegrityViolationException("Duplicate entry "+ vendor.getVendorId()+" for key 'vendor.vendorId'"));
 
         // when
-        ResponseEntity<ResponseMessage<Vendor>> responseEntity = this.vendorController.createVendor(vendor);
+        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.createVendor(vendor);
 
         // then
-        ResponseMessage<Vendor> responseMessage = (ResponseMessage<Vendor>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        Vendor createdVendor = responseMessage.getData();
+        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        Vendor createdVendor = responsePayload.getData();
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -197,13 +197,13 @@ class VendorControllerTest {
         // given
         given(this.vendorService.createVendor(any(Vendor.class))).willThrow(new RuntimeException("Something went wrong!"));
         // when
-        ResponseEntity<ResponseMessage<Vendor>> responseEntity = this.vendorController.createVendor(vendor);
+        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.createVendor(vendor);
 
         // then
-        ResponseMessage<Vendor> responseMessage = (ResponseMessage<Vendor>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        Vendor createdVendor = responseMessage.getData();
+        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        Vendor createdVendor = responsePayload.getData();
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -222,13 +222,13 @@ class VendorControllerTest {
         given(this.vendorService.updateVendor(vendor1.getId(), vendor1)).willReturn(vendor1);
 
         // when
-        ResponseEntity<ResponseMessage<Vendor>> responseEntity = this.vendorController.updateVendor(vendor1.getId(), vendor1);
+        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.updateVendor(vendor1.getId(), vendor1);
 
         // then
-        ResponseMessage<Vendor> responseMessage = (ResponseMessage<Vendor>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        Vendor updatedVendor = responseMessage.getData();
+        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        Vendor updatedVendor = responsePayload.getData();
 
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -248,13 +248,13 @@ class VendorControllerTest {
         given(this.vendorService.updateVendor(vendor1.getId(),vendor1)).willThrow(new DataIntegrityViolationException("Duplicate entry "+ vendor1.getVendorId()+" for key 'vendor.vendorId'"));
 
         // when
-        ResponseEntity<ResponseMessage<Vendor>> responseEntity = this.vendorController.updateVendor(vendor1.getId(),vendor1);
+        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.updateVendor(vendor1.getId(),vendor1);
 
         // then
-        ResponseMessage<Vendor> responseMessage = (ResponseMessage<Vendor>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        Vendor updatedVendor = responseMessage.getData();
+        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        Vendor updatedVendor = responsePayload.getData();
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -271,13 +271,13 @@ class VendorControllerTest {
         // given
         given(this.vendorService.updateVendor(any(Long.class), any(Vendor.class))).willThrow(new RuntimeException("Something went wrong!"));
         // when
-        ResponseEntity<ResponseMessage<Vendor>> responseEntity = this.vendorController.updateVendor(vendor1.getId(), vendor1);
+        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.updateVendor(vendor1.getId(), vendor1);
 
         // then
-        ResponseMessage<Vendor> responseMessage = (ResponseMessage<Vendor>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
-        Vendor updatedVendor = responseMessage.getData();
+        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
+        Vendor updatedVendor = responsePayload.getData();
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -293,12 +293,12 @@ class VendorControllerTest {
 
 
         // when
-        ResponseEntity<ResponseMessage<Vendor>> responseEntity = this.vendorController.deleteVendor(vendor1.getId());
+        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.deleteVendor(vendor1.getId());
 
         // then
-        ResponseMessage<Vendor> responseMessage = (ResponseMessage<Vendor>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
+        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
         assertTrue(isSuccess);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
@@ -310,12 +310,12 @@ class VendorControllerTest {
 
 
         // when
-        ResponseEntity<ResponseMessage<Vendor>> responseEntity = this.vendorController.deleteVendor(vendor1.getId());
+        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.deleteVendor(vendor1.getId());
 
         // then
-        ResponseMessage<Vendor> responseMessage = (ResponseMessage<Vendor>) responseEntity.getBody();
-        assert responseMessage != null;
-        boolean isSuccess = responseMessage.isSuccess();
+        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
+        assert responsePayload != null;
+        boolean isSuccess = responsePayload.isSuccess();
         assertFalse(isSuccess);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
     }
