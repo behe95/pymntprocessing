@@ -85,7 +85,7 @@ class PaymentTransactionControllerTest {
         ResponsePayload<List<PaymentTransactionDTO>> responsePayload = (ResponsePayload<List<PaymentTransactionDTO>>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        List<PaymentTransactionDTO> paymentTransactions = responsePayload.getData();
+        List<PaymentTransactionDTO> paymentTransactions = responsePayload.getPayload();
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertTrue(isSuccess);
@@ -105,7 +105,7 @@ class PaymentTransactionControllerTest {
         ResponsePayload<List<PaymentTransactionDTO>> responsePayload = (ResponsePayload<List<PaymentTransactionDTO>>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        List<PaymentTransactionDTO> paymentTransactions = responsePayload.getData();
+        List<PaymentTransactionDTO> paymentTransactions = responsePayload.getPayload();
 
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -125,7 +125,7 @@ class PaymentTransactionControllerTest {
         ResponsePayload<PaymentTransactionDTO> responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO responsePaymentTransaction = responsePayload.getData();
+        PaymentTransactionDTO responsePaymentTransaction = responsePayload.getPayload();
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertTrue(isSuccess);
@@ -145,7 +145,7 @@ class PaymentTransactionControllerTest {
         ResponsePayload<PaymentTransactionDTO> responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
         assert  responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO responsePaymentTransaction = responsePayload.getData();
+        PaymentTransactionDTO responsePaymentTransaction = responsePayload.getPayload();
 
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -166,7 +166,7 @@ class PaymentTransactionControllerTest {
         ResponsePayload<List<PaymentTransactionDTO>> responsePayload = (ResponsePayload<List<PaymentTransactionDTO>>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        List<PaymentTransactionDTO> responsePaymentTransactions = responsePayload.getData();
+        List<PaymentTransactionDTO> responsePaymentTransactions = responsePayload.getPayload();
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertTrue(isSuccess);
@@ -188,7 +188,7 @@ class PaymentTransactionControllerTest {
         ResponsePayload<List<PaymentTransactionDTO>> responsePayload = (ResponsePayload<List<PaymentTransactionDTO>>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        List<PaymentTransactionDTO> responsePaymentTransactions = responsePayload.getData();
+        List<PaymentTransactionDTO> responsePaymentTransactions = responsePayload.getPayload();
 
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -286,7 +286,7 @@ class PaymentTransactionControllerTest {
         responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO responsePaymentTransaction = responsePayload.getData();
+        PaymentTransactionDTO responsePaymentTransaction = responsePayload.getPayload();
 
         assertNull(responsePaymentTransaction);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
@@ -342,7 +342,7 @@ class PaymentTransactionControllerTest {
         responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
         assert responsePayload != null;
         isSuccess = responsePayload.isSuccess();
-        responsePaymentTransaction = responsePayload.getData();
+        responsePaymentTransaction = responsePayload.getPayload();
 
         assertNull(responsePaymentTransaction);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
@@ -374,7 +374,7 @@ class PaymentTransactionControllerTest {
         ResponsePayload<PaymentTransactionDTO> responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO createdPaymentTransaction = responsePayload.getData();
+        PaymentTransactionDTO createdPaymentTransaction = responsePayload.getPayload();
 
         assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
         assertTrue(isSuccess);
@@ -403,7 +403,7 @@ class PaymentTransactionControllerTest {
         ResponsePayload<PaymentTransactionDTO> responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO createdPaymentTransaction = responsePayload.getData();
+        PaymentTransactionDTO createdPaymentTransaction = responsePayload.getPayload();
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -433,7 +433,7 @@ class PaymentTransactionControllerTest {
         ResponsePayload<PaymentTransactionDTO> responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO createdPaymentTransaction = responsePayload.getData();
+        PaymentTransactionDTO createdPaymentTransaction = responsePayload.getPayload();
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -538,7 +538,7 @@ class PaymentTransactionControllerTest {
         responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO responsePaymentTransaction = responsePayload.getData();
+        PaymentTransactionDTO responsePaymentTransaction = responsePayload.getPayload();
 
         assertNull(responsePaymentTransaction);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
@@ -594,7 +594,7 @@ class PaymentTransactionControllerTest {
         responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
         assert responsePayload != null;
         isSuccess = responsePayload.isSuccess();
-        responsePaymentTransaction = responsePayload.getData();
+        responsePaymentTransaction = responsePayload.getPayload();
 
         assertNull(responsePaymentTransaction);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
@@ -626,7 +626,7 @@ class PaymentTransactionControllerTest {
         ResponsePayload<PaymentTransactionDTO> responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO responseUpdatedPaymentTransaction = responsePayload.getData();
+        PaymentTransactionDTO responseUpdatedPaymentTransaction = responsePayload.getPayload();
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertTrue(isSuccess);
@@ -655,7 +655,7 @@ class PaymentTransactionControllerTest {
         ResponsePayload<PaymentTransactionDTO> responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO responseUpdatedPaymentTransaction = responsePayload.getData();
+        PaymentTransactionDTO responseUpdatedPaymentTransaction = responsePayload.getPayload();
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -685,7 +685,7 @@ class PaymentTransactionControllerTest {
         ResponsePayload<PaymentTransactionDTO> responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO responseUpdatedPaymentTransaction = responsePayload.getData();
+        PaymentTransactionDTO responseUpdatedPaymentTransaction = responsePayload.getPayload();
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
         assertFalse(isSuccess);

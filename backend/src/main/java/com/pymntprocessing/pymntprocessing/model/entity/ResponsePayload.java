@@ -1,7 +1,7 @@
 package com.pymntprocessing.pymntprocessing.model.entity;
 
 public class ResponsePayload<T> {
-    T data;
+    T payload;
     String message;
 
     boolean isSuccess;
@@ -9,18 +9,18 @@ public class ResponsePayload<T> {
     public ResponsePayload() {
     }
 
-    public ResponsePayload(T data, boolean isSuccess, String message) {
-        this.data = data;
+    public ResponsePayload(T payload, boolean isSuccess, String message) {
+        this.payload = payload;
         this.isSuccess = isSuccess;
         this.message = message;
     }
 
-    public T getData() {
-        return data;
+    public T getPayload() {
+        return payload;
     }
 
-    public void setData(T data) {
-        this.data = data;
+    public void setPayload(T payload) {
+        this.payload = payload;
     }
 
     public boolean isSuccess() {

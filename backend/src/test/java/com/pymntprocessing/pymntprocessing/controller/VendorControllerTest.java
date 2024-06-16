@@ -58,7 +58,7 @@ class VendorControllerTest {
         ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        Vendor responseVendor = responsePayload.getData();
+        Vendor responseVendor = responsePayload.getPayload();
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertTrue(isSuccess);
@@ -79,7 +79,7 @@ class VendorControllerTest {
         ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        Vendor responseVendor = responsePayload.getData();
+        Vendor responseVendor = responsePayload.getPayload();
 
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -100,7 +100,7 @@ class VendorControllerTest {
         ResponsePayload<List<Vendor>> responsePayload = (ResponsePayload<List<Vendor>>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        List<Vendor> vendors = responsePayload.getData();
+        List<Vendor> vendors = responsePayload.getPayload();
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertTrue(isSuccess);
@@ -119,7 +119,7 @@ class VendorControllerTest {
         ResponsePayload<List<Vendor>> responsePayload = (ResponsePayload<List<Vendor>>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        List<Vendor> vendors = responsePayload.getData();
+        List<Vendor> vendors = responsePayload.getPayload();
 
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -149,7 +149,7 @@ class VendorControllerTest {
         ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        Vendor createdVendor = responsePayload.getData();
+        Vendor createdVendor = responsePayload.getPayload();
 
         assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
         assertTrue(isSuccess);
@@ -176,7 +176,7 @@ class VendorControllerTest {
         ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        Vendor createdVendor = responsePayload.getData();
+        Vendor createdVendor = responsePayload.getPayload();
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -203,7 +203,7 @@ class VendorControllerTest {
         ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        Vendor createdVendor = responsePayload.getData();
+        Vendor createdVendor = responsePayload.getPayload();
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -228,7 +228,7 @@ class VendorControllerTest {
         ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        Vendor updatedVendor = responsePayload.getData();
+        Vendor updatedVendor = responsePayload.getPayload();
 
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -254,7 +254,7 @@ class VendorControllerTest {
         ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        Vendor updatedVendor = responsePayload.getData();
+        Vendor updatedVendor = responsePayload.getPayload();
 
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         assertFalse(isSuccess);
@@ -277,7 +277,7 @@ class VendorControllerTest {
         ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
         assert responsePayload != null;
         boolean isSuccess = responsePayload.isSuccess();
-        Vendor updatedVendor = responsePayload.getData();
+        Vendor updatedVendor = responsePayload.getPayload();
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
         assertFalse(isSuccess);

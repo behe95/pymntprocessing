@@ -111,10 +111,10 @@ class ProductControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
         ).andDo(print())
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.data.id").value(id))
-                .andExpect(jsonPath("$.data.paymentTransactionDTO").value(productDTO1.getPaymentTransactionDTO()))
-                .andExpect(jsonPath("$.data.productName").value(productDTO1.getProductName()))
-                .andExpect(jsonPath("$.data.productDescription").value(productDTO1.getProductDescription()))
+        .andExpect(jsonPath("$.payload.id").value(id))
+                .andExpect(jsonPath("$.payload.paymentTransactionDTO").value(productDTO1.getPaymentTransactionDTO()))
+                .andExpect(jsonPath("$.payload.productName").value(productDTO1.getProductName()))
+                .andExpect(jsonPath("$.payload.productDescription").value(productDTO1.getProductDescription()))
                 .andExpect(jsonPath("$.message").value(""))
                 .andExpect(jsonPath("$.success").value(true));
 
@@ -136,7 +136,7 @@ class ProductControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                 ).andDo(print())
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.data").value(nullValue()))
+                .andExpect(jsonPath("$.payload").value(nullValue()))
                 .andExpect(jsonPath("$.message").value("Product not found!"))
                 .andExpect(jsonPath("$.success").value(false));
 
@@ -158,13 +158,13 @@ class ProductControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
             ).andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data", hasSize(2)))
+            .andExpect(jsonPath("$.payload", hasSize(2)))
             .andExpect(jsonPath("$.message").value(""))
             .andExpect(jsonPath("$.success").value(true))
             .andReturn();
 
         String JSON = mvcResult.getResponse().getContentAsString();
-        List<Map<String, Object>> productsMap = JsonPath.parse(JSON).read("$.data");
+        List<Map<String, Object>> productsMap = JsonPath.parse(JSON).read("$.payload");
 
         for (Map<String, Object> product : productsMap) {
             int id = Integer.parseInt(product.get("id").toString());
@@ -237,7 +237,7 @@ class ProductControllerTest {
                                         .contentType(MediaType.APPLICATION_JSON)
                         ).andDo(print())
                         .andExpect(status().isNotFound())
-                        .andExpect(jsonPath("$.data").value(nullValue()))
+                        .andExpect(jsonPath("$.payload").value(nullValue()))
                         .andExpect(jsonPath("$.message").value("Products not found"))
                         .andExpect(jsonPath("$.success").value(false))
                         .andReturn();
