@@ -1,6 +1,11 @@
 package com.pymntprocessing.pymntprocessing.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pymntprocessing.pymntprocessing.exception.InvalidDataProvidedException;
+import com.pymntprocessing.pymntprocessing.exception.PaymentTransactionNotFoundException;
 import com.pymntprocessing.pymntprocessing.model.dto.PaymentTransactionDTO;
+import com.pymntprocessing.pymntprocessing.model.entity.PaymentTransaction;
 import com.pymntprocessing.pymntprocessing.model.entity.ResponsePayload;
 import com.pymntprocessing.pymntprocessing.model.entity.TransactionType;
 import com.pymntprocessing.pymntprocessing.model.entity.Vendor;
@@ -9,32 +14,47 @@ import com.pymntprocessing.pymntprocessing.service.VendorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
+@WebMvcTest(PaymentTransactionController.class)
+@AutoConfigureMockMvc
 class PaymentTransactionControllerTest {
 
-    @Mock
+    @MockBean
     private PaymentTransactionService paymentTransactionService;
 
-    @Mock
+    @MockBean
     private VendorService vendorService;
+    @Autowired
+    private MockMvc mockMvc;
 
     @InjectMocks
     private PaymentTransactionController paymentTransactionController;
 
+    @Autowired
+    private ObjectMapper objectMapper;
     private PaymentTransactionDTO paymentTransactionDTO1;
     private PaymentTransactionDTO paymentTransactionDTO2;
 //    TransactionStatus transactionStatus;
@@ -74,282 +94,187 @@ class PaymentTransactionControllerTest {
     }
 
     @Test
-    void getAllPaymentTransactionWhenExist() {
+    void getAllPaymentTransactionWhenExist() throws Exception {
+        paymentTransactionDTO1.setId(1L);
+        paymentTransactionDTO2.setId(2L);
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(List.of(paymentTransactionDTO1, paymentTransactionDTO2), true, ""));
         // given
         given(this.paymentTransactionService.getAllPaymentTransaction()).willReturn(List.of(paymentTransactionDTO1, paymentTransactionDTO2));
 
         // when
-        ResponseEntity<ResponsePayload<List<PaymentTransactionDTO>>> responseEntity = this.paymentTransactionController.getAllPaymentTransaction();
-
         // then
-        ResponsePayload<List<PaymentTransactionDTO>> responsePayload = (ResponsePayload<List<PaymentTransactionDTO>>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        List<PaymentTransactionDTO> paymentTransactions = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/transaction")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
 
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertTrue(isSuccess);
-        assertEquals(2, paymentTransactions.size());
-        verify(this.paymentTransactionService, times(1)).getAllPaymentTransaction();
+        then(this.paymentTransactionService).should(times(1)).getAllPaymentTransaction();
     }
 
     @Test
-    void getAllPaymentTransactionWhenNotExist() {
+    void getAllPaymentTransactionWhenNotExist() throws Exception {
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(List.of(), true, ""));
         // given
         given(this.paymentTransactionService.getAllPaymentTransaction()).willReturn(List.of());
 
         // when
-        ResponseEntity<ResponsePayload<List<PaymentTransactionDTO>>> responseEntity = this.paymentTransactionController.getAllPaymentTransaction();
-
         // then
-        ResponsePayload<List<PaymentTransactionDTO>> responsePayload = (ResponsePayload<List<PaymentTransactionDTO>>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        List<PaymentTransactionDTO> paymentTransactions = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/transaction")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
 
-        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertEquals(0, paymentTransactions.size());
-        verify(this.paymentTransactionService, times(1)).getAllPaymentTransaction();
+        then(this.paymentTransactionService).should(times(1)).getAllPaymentTransaction();
     }
 
     @Test
-    void getPaymentTransactionByIdWhenFound() {
+    void getPaymentTransactionByIdWhenFound() throws Exception {
+        Long id = 1L;
+
+        paymentTransactionDTO1.setId(id);
+
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(paymentTransactionDTO1, true, ""));
         // given
-        given(this.paymentTransactionService.getPaymentTransactionById(1L)).willReturn(paymentTransactionDTO1);
+        given(this.paymentTransactionService.getPaymentTransactionById(any(Long.class))).willReturn(paymentTransactionDTO1);
 
         // when
-        ResponseEntity<ResponsePayload<PaymentTransactionDTO>> responseEntity = this.paymentTransactionController.getPaymentTransactionById(1L);
-
         // then
-        ResponsePayload<PaymentTransactionDTO> responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO responsePaymentTransaction = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/transaction/"+id)
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
 
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertTrue(isSuccess);
-        assertEquals(paymentTransactionDTO1, responsePaymentTransaction);
+        ArgumentCaptor<Long> productArgumentCaptorId = ArgumentCaptor.forClass(Long.class);
+        then(this.paymentTransactionService).should(times(1)).getPaymentTransactionById(productArgumentCaptorId.capture());
+        assertEquals(id, productArgumentCaptorId.getValue());
         verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(1L);
     }
 
     @Test
-    void getPaymentTransactionByIdWhenNotFound() {
+    void getPaymentTransactionByIdWhenNotFound() throws Exception {
+        Long id = 1L;
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(new PaymentTransactionNotFoundException(), false, "Payment transaction doesn't exist!"));
         // given
-        given(this.paymentTransactionService.getPaymentTransactionById(11L)).willReturn(null);
+        given(this.paymentTransactionService.getPaymentTransactionById(any(Long.class))).willThrow(new PaymentTransactionNotFoundException());
 
         // when
-        ResponseEntity<ResponsePayload<PaymentTransactionDTO>> responseEntity = this.paymentTransactionController.getPaymentTransactionById(11L);
-
         // then
-        ResponsePayload<PaymentTransactionDTO> responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-        assert  responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO responsePaymentTransaction = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/transaction/"+id)
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
 
-        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertNull(responsePaymentTransaction);
-        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(11L);
+        ArgumentCaptor<Long> productArgumentCaptorId = ArgumentCaptor.forClass(Long.class);
+        then(this.paymentTransactionService).should(times(1)).getPaymentTransactionById(productArgumentCaptorId.capture());
+        assertEquals(id, productArgumentCaptorId.getValue());
+        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(1L);
 
     }
 
     @Test
-    void getAllPaymentTransactionByVendorIdWhenExist() {
+    void getAllPaymentTransactionByVendorIdWhenExist() throws Exception {
+
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(List.of(paymentTransactionDTO1, paymentTransactionDTO2), true, ""));
+
         // given
-        given(this.paymentTransactionService.getAllPaymentTransactionByVendorId(1L)).willReturn(List.of(paymentTransactionDTO1, paymentTransactionDTO2));
+        given(this.paymentTransactionService.getAllPaymentTransactionByVendorId(any(Long.class))).willReturn(List.of(paymentTransactionDTO1, paymentTransactionDTO2));
 
         // when
-        ResponseEntity<ResponsePayload<List<PaymentTransactionDTO>>> responseEntity = this.paymentTransactionController.getAllPaymentTransactionByVendorId(1L);
-
         // then
-        ResponsePayload<List<PaymentTransactionDTO>> responsePayload = (ResponsePayload<List<PaymentTransactionDTO>>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        List<PaymentTransactionDTO> responsePaymentTransactions = responsePayload.getPayload();
-
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertTrue(isSuccess);
-        assertEquals(2, responsePaymentTransactions.size());
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/transaction/vendor/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
         verify(this.paymentTransactionService, times(1)).getAllPaymentTransactionByVendorId(1L);
     }
 
 
 
     @Test
-    void getAllPaymentTransactionByVendorIdWhenNotExist() {
+    void getAllPaymentTransactionByVendorIdWhenNotExist() throws Exception {
+
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(List.of(), true, ""));
+
         // given
-        given(this.paymentTransactionService.getAllPaymentTransactionByVendorId(1L)).willReturn(List.of());
+        given(this.paymentTransactionService.getAllPaymentTransactionByVendorId(any(Long.class))).willReturn(List.of());
 
         // when
-        ResponseEntity<ResponsePayload<List<PaymentTransactionDTO>>> responseEntity = this.paymentTransactionController.getAllPaymentTransactionByVendorId(1L);
-
         // then
-        ResponsePayload<List<PaymentTransactionDTO>> responsePayload = (ResponsePayload<List<PaymentTransactionDTO>>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        List<PaymentTransactionDTO> responsePaymentTransactions = responsePayload.getPayload();
-
-        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertEquals(0, responsePaymentTransactions.size());
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/transaction/vendor/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
         verify(this.paymentTransactionService, times(1)).getAllPaymentTransactionByVendorId(1L);
     }
 
     @Test
-    void createPaymentTransactionWhenDataNotProvided() {
+    void createPaymentTransactionWhenVendorDataNotProvided() throws Exception {
+        String errorMessage = "Vendor information not provided!";
 
-        ResponseEntity<ResponsePayload<PaymentTransactionDTO>> responseEntity;
-        ResponsePayload<PaymentTransactionDTO> responsePayload;
-        /**
-         * Vendor not provided
-         */
-        PaymentTransactionDTO newPaymentTransaction = paymentTransactionDTO1;
-        newPaymentTransaction.setVendor(null);
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(new InvalidDataProvidedException(errorMessage), false, errorMessage));
 
-        // when
-        responseEntity = this.paymentTransactionController.createPaymentTransaction(newPaymentTransaction);
+        paymentTransactionDTO1.setVendor(null);
 
-        // then
-        responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
+        String requestBodyJSON = this.objectMapper.writeValueAsString(paymentTransactionDTO1);
 
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(0)).getVendorById(any(Long.class));
-//        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).createPaymentTransaction(any(PaymentTransactionDTO.class));
-
-//        /**
-//         * Transaction status not provided
-//         */
-//        newPaymentTransaction.setVendor(vendor1);
-////        newPaymentTransaction.setTransactionStatus(null);
-//
-//        // when
-//        responseEntity = this.paymentTransactionController.createPaymentTransaction(newPaymentTransaction);
-//
-//        // then
-//        responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-//        assert responsePayload != null;
-//        isSuccess = responsePayload.isSuccess();
-//
-//        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-//        assertFalse(isSuccess);
-//        verify(this.vendorService, times(0)).getVendorById(any(Long.class));
-////        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
-//        verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
-//        verify(this.paymentTransactionService, times(0)).createPaymentTransaction(any(PaymentTransactionDTO.class));
-
-        /**
-         * Transaction type not provided
-         */
-        newPaymentTransaction.setVendor(vendor1);
-//        newPaymentTransaction.setTransactionStatus(transactionStatus);
-        newPaymentTransaction.setTransactionType(null);
+        // given
+        given(this.paymentTransactionService.createPaymentTransaction(any(PaymentTransactionDTO.class))).willThrow(new InvalidDataProvidedException(errorMessage));
 
         // when
-        responseEntity = this.paymentTransactionController.createPaymentTransaction(newPaymentTransaction);
-
         // then
-        responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        isSuccess = responsePayload.isSuccess();
-
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(0)).getVendorById(any(Long.class));
-//        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.post("/api/v1/transaction")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBodyJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
         verify(this.paymentTransactionService, times(0)).createPaymentTransaction(any(PaymentTransactionDTO.class));
     }
 
     @Test
-    void createPaymentTransactionWhenInvalidDataProvided() {
+    void createPaymentTransactionWhenTransactionTypeDataNotProvided() throws Exception {
+        String errorMessage = "Transaction type not provided!";
 
-        ResponseEntity<ResponsePayload<PaymentTransactionDTO>> responseEntity;
-        ResponsePayload<PaymentTransactionDTO> responsePayload;
-        /**
-         * Invalid vendor provided
-         */
-        PaymentTransactionDTO newPaymentTransaction = paymentTransactionDTO1;
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(new InvalidDataProvidedException(errorMessage), false, errorMessage));
 
-        // given
-        given(this.vendorService.getVendorById(newPaymentTransaction.getVendor().getId())).willReturn(null);
+        paymentTransactionDTO1.setVendor(vendor1);
+        paymentTransactionDTO1.setTransactionType(null);
 
-        // when
-        responseEntity = this.paymentTransactionController.createPaymentTransaction(newPaymentTransaction);
-
-        // then
-        responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO responsePaymentTransaction = responsePayload.getPayload();
-
-        assertNull(responsePaymentTransaction);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(1)).getVendorById(any(Long.class));
-//        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).createPaymentTransaction(any(PaymentTransactionDTO.class));
-
-        reset(vendorService);
-//        /**
-//         * Invalid Transaction status provided
-//         */
-//
-//        // given
-//        given(this.vendorService.getVendorById(newPaymentTransaction.getVendor().getId())).willReturn(newPaymentTransaction.getVendor());
-////        given(this.paymentTransactionService.getTransactionStatusById(newPaymentTransaction.getId())).willReturn(null);
-//
-//        // when
-//        responseEntity = this.paymentTransactionController.createPaymentTransaction(newPaymentTransaction);
-//
-//        // then
-//        responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-//        assert responsePayload != null;
-//        isSuccess = responsePayload.isSuccess();
-//        responsePaymentTransaction = responsePayload.getData();
-//
-//        assertNull(responsePaymentTransaction);
-//        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-//        assertFalse(isSuccess);
-//        verify(this.vendorService, times(1)).getVendorById(any(Long.class));
-////        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(any(Long.class));
-//        verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
-//        verify(this.paymentTransactionService, times(0)).createPaymentTransaction(any(PaymentTransactionDTO.class));
-//
-//
-//        reset(vendorService);
-//        reset(paymentTransactionService);
-
-        /**
-         * Invalid Transaction type provided
-         */
+        String requestBodyJSON = this.objectMapper.writeValueAsString(paymentTransactionDTO1);
 
         // given
-        given(this.vendorService.getVendorById(newPaymentTransaction.getVendor().getId())).willReturn(newPaymentTransaction.getVendor());
-//        given(this.paymentTransactionService.getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId())).willReturn(newPaymentTransaction.getTransactionStatus());
-        given(this.paymentTransactionService.getTransactionTypeById(newPaymentTransaction.getTransactionType().getId())).willReturn(null);
+        given(this.paymentTransactionService.createPaymentTransaction(any(PaymentTransactionDTO.class))).willThrow(new InvalidDataProvidedException(errorMessage));
 
         // when
-        responseEntity = this.paymentTransactionController.createPaymentTransaction(newPaymentTransaction);
-
         // then
-        responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        isSuccess = responsePayload.isSuccess();
-        responsePaymentTransaction = responsePayload.getPayload();
-
-        assertNull(responsePaymentTransaction);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(1)).getVendorById(any(Long.class));
-//        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(any(Long.class));
-        verify(this.paymentTransactionService, times(1)).getTransactionTypeById(any(Long.class));
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.post("/api/v1/transaction")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBodyJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
         verify(this.paymentTransactionService, times(0)).createPaymentTransaction(any(PaymentTransactionDTO.class));
     }
 
@@ -357,251 +282,179 @@ class PaymentTransactionControllerTest {
 
 
     @Test
-    void createPaymentTransaction() {
+    void createPaymentTransaction() throws Exception {
+        paymentTransactionDTO1.setVendor(vendor1);
 
-        PaymentTransactionDTO newPaymentTransaction = paymentTransactionDTO1;
+        transactionType.setId(1L);
+        paymentTransactionDTO1.setTransactionType(transactionType);
+
+        paymentTransactionDTO1.setId(null);
+        String requestBodyJSON = this.objectMapper.writeValueAsString(paymentTransactionDTO1);
+
+
+        paymentTransactionDTO1.setId(1L);
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(paymentTransactionDTO1, true, "Payment transaction created!"));
 
         // given
-        given(this.vendorService.getVendorById(newPaymentTransaction.getVendor().getId())).willReturn(newPaymentTransaction.getVendor());
-//        given(this.paymentTransactionService.getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId())).willReturn(newPaymentTransaction.getTransactionStatus());
-        given(this.paymentTransactionService.getTransactionTypeById(newPaymentTransaction.getTransactionType().getId())).willReturn(newPaymentTransaction.getTransactionType());
-        given(this.paymentTransactionService.createPaymentTransaction(newPaymentTransaction)).willReturn(newPaymentTransaction);
+        given(this.paymentTransactionService.createPaymentTransaction(any(PaymentTransactionDTO.class))).willReturn(paymentTransactionDTO1);
 
         // when
-        ResponseEntity<ResponsePayload<PaymentTransactionDTO>> responseEntity = this.paymentTransactionController.createPaymentTransaction(newPaymentTransaction);
-
         // then
-        ResponsePayload<PaymentTransactionDTO> responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO createdPaymentTransaction = responsePayload.getPayload();
-
-        assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
-        assertTrue(isSuccess);
-        assertEquals(newPaymentTransaction, createdPaymentTransaction);
-        verify(this.vendorService, times(1)).getVendorById(newPaymentTransaction.getVendor().getId());
-//        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId());
-        verify(this.paymentTransactionService, times(1)).getTransactionTypeById(newPaymentTransaction.getTransactionType().getId());
-        verify(this.paymentTransactionService, times(1)).createPaymentTransaction(newPaymentTransaction);
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.post("/api/v1/transaction")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBodyJSON)
+                ).andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
+        verify(this.paymentTransactionService, times(1)).createPaymentTransaction(any(PaymentTransactionDTO.class));
 
     }
     @Test
-    void createVendorDuplicate() {
+    void createPaymentTransactionWithDuplicateException() throws Exception {
+        paymentTransactionDTO1.setVendor(vendor1);
 
-        PaymentTransactionDTO newPaymentTransaction = paymentTransactionDTO1;
+        transactionType.setId(1L);
+        paymentTransactionDTO1.setTransactionType(transactionType);
+
+        paymentTransactionDTO1.setId(null);
+        String requestBodyJSON = this.objectMapper.writeValueAsString(paymentTransactionDTO1);
+
+
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(null, false, "ERROR: Duplicate entry!"));
 
         // given
-        given(this.vendorService.getVendorById(newPaymentTransaction.getVendor().getId())).willReturn(newPaymentTransaction.getVendor());
-//        given(this.paymentTransactionService.getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId())).willReturn(newPaymentTransaction.getTransactionStatus());
-        given(this.paymentTransactionService.getTransactionTypeById(newPaymentTransaction.getTransactionType().getId())).willReturn(newPaymentTransaction.getTransactionType());
-        given(this.paymentTransactionService.createPaymentTransaction(newPaymentTransaction)).willThrow(new DataIntegrityViolationException(""));
+        given(this.paymentTransactionService.createPaymentTransaction(any(PaymentTransactionDTO.class))).willThrow(new DataIntegrityViolationException(""));
 
         // when
-        ResponseEntity<ResponsePayload<PaymentTransactionDTO>> responseEntity = this.paymentTransactionController.createPaymentTransaction(newPaymentTransaction);
-
         // then
-        ResponsePayload<PaymentTransactionDTO> responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO createdPaymentTransaction = responsePayload.getPayload();
-
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertNull(createdPaymentTransaction);
-        verify(this.vendorService, times(1)).getVendorById(newPaymentTransaction.getVendor().getId());
-//        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId());
-        verify(this.paymentTransactionService, times(1)).getTransactionTypeById(newPaymentTransaction.getTransactionType().getId());
-        verify(this.paymentTransactionService, times(1)).createPaymentTransaction(newPaymentTransaction);
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.post("/api/v1/transaction")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBodyJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
+        verify(this.paymentTransactionService, times(1)).createPaymentTransaction(any(PaymentTransactionDTO.class));
 
     }
 
     @Test
-    void createVendorInternalServerErr() {
+    void createPaymentTransactionWithInternalServerErr() throws Exception {
+        paymentTransactionDTO1.setVendor(vendor1);
 
-        PaymentTransactionDTO newPaymentTransaction = paymentTransactionDTO1;
+        transactionType.setId(1L);
+        paymentTransactionDTO1.setTransactionType(transactionType);
+
+        paymentTransactionDTO1.setId(null);
+        String requestBodyJSON = this.objectMapper.writeValueAsString(paymentTransactionDTO1);
+
+
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(null, false, "Something went wrong!"));
 
         // given
-        given(this.vendorService.getVendorById(newPaymentTransaction.getVendor().getId())).willReturn(newPaymentTransaction.getVendor());
-//        given(this.paymentTransactionService.getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId())).willReturn(newPaymentTransaction.getTransactionStatus());
-        given(this.paymentTransactionService.getTransactionTypeById(newPaymentTransaction.getTransactionType().getId())).willReturn(newPaymentTransaction.getTransactionType());
-        given(this.paymentTransactionService.createPaymentTransaction(newPaymentTransaction)).willThrow(new RuntimeException(""));
+        given(this.paymentTransactionService.createPaymentTransaction(any(PaymentTransactionDTO.class))).willThrow(new RuntimeException(""));
 
         // when
-        ResponseEntity<ResponsePayload<PaymentTransactionDTO>> responseEntity = this.paymentTransactionController.createPaymentTransaction(newPaymentTransaction);
-
         // then
-        ResponsePayload<PaymentTransactionDTO> responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO createdPaymentTransaction = responsePayload.getPayload();
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertNull(createdPaymentTransaction);
-        verify(this.vendorService, times(1)).getVendorById(newPaymentTransaction.getVendor().getId());
-//        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(newPaymentTransaction.getTransactionStatus().getId());
-        verify(this.paymentTransactionService, times(1)).getTransactionTypeById(newPaymentTransaction.getTransactionType().getId());
-        verify(this.paymentTransactionService, times(1)).createPaymentTransaction(newPaymentTransaction);
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.post("/api/v1/transaction")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBodyJSON)
+                ).andDo(print())
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
+        verify(this.paymentTransactionService, times(1)).createPaymentTransaction(any(PaymentTransactionDTO.class));
 
     }
 
 
 
 
-    @Test
-    void updatePaymentTransactionWhenDataNotProvided() {
 
-        ResponseEntity<ResponsePayload<PaymentTransactionDTO>> responseEntity;
-        ResponsePayload<PaymentTransactionDTO> responsePayload;
-        /**
-         * Vendor not provided
-         */
-        PaymentTransactionDTO updatedPaymentTransaction = paymentTransactionDTO1;
-        updatedPaymentTransaction.setVendor(null);
+    @Test
+    void updatePaymentTransactionWhenVendorDataNotProvided() throws Exception {
+        String errorMessage = "Vendor information not provided!";
+
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(new InvalidDataProvidedException(errorMessage), false, errorMessage));
+
+        paymentTransactionDTO1.setId(1L);
+        paymentTransactionDTO1.setVendor(null);
+
+        String requestBodyJSON = this.objectMapper.writeValueAsString(paymentTransactionDTO1);
+
+        // given
+        given(this.paymentTransactionService.updatePaymentTransaction(any(Long.class), any(PaymentTransactionDTO.class))).willThrow(new InvalidDataProvidedException(errorMessage));
 
         // when
-        responseEntity = this.paymentTransactionController.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
-
         // then
-        responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(0)).getVendorById(any(Long.class));
-//        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/transaction/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBodyJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
         verify(this.paymentTransactionService, times(0)).updatePaymentTransaction(any(Long.class),any(PaymentTransactionDTO.class));
+    }
 
-//        /**
-//         * Transaction status not provided
-//         */
-//        updatedPaymentTransaction.setVendor(vendor1);
-////        updatedPaymentTransaction.setTransactionStatus(null);
-//
-//        // when
-//        responseEntity = this.paymentTransactionController.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
-//
-//        // then
-//        responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-//        assert responsePayload != null;
-//        isSuccess = responsePayload.isSuccess();
-//
-//        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-//        assertFalse(isSuccess);
-//        verify(this.vendorService, times(0)).getVendorById(any(Long.class));
-////        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
-//        verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
-//        verify(this.paymentTransactionService, times(0)).updatePaymentTransaction(any(Long.class),any(PaymentTransactionDTO.class));
+    @Test
+    void updatePaymentTransactionWhenInvalidPaymentTransactionDataProvided() throws Exception {
+        String errorMessage = "Invalid payment transaction provided!";
 
-        /**
-         * Transaction type not provided
-         */
-        updatedPaymentTransaction.setVendor(vendor1);
-//        updatedPaymentTransaction.setTransactionStatus(transactionStatus);
-        updatedPaymentTransaction.setTransactionType(null);
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(new InvalidDataProvidedException(errorMessage), false, errorMessage));
+
+        paymentTransactionDTO1.setId(null);
+        paymentTransactionDTO1.setVendor(vendor1);
+        paymentTransactionDTO1.setTransactionType(null);
+
+        String requestBodyJSON = this.objectMapper.writeValueAsString(paymentTransactionDTO1);
+
+        // given
+        given(this.paymentTransactionService.updatePaymentTransaction(any(Long.class), any(PaymentTransactionDTO.class))).willThrow(new InvalidDataProvidedException(errorMessage));
 
         // when
-        responseEntity = this.paymentTransactionController.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
-
         // then
-        responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        isSuccess = responsePayload.isSuccess();
-
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(0)).getVendorById(any(Long.class));
-//        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/transaction/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBodyJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
         verify(this.paymentTransactionService, times(0)).updatePaymentTransaction(any(Long.class), any(PaymentTransactionDTO.class));
     }
 
     @Test
-    void updatePaymentTransactionWhenInvalidDataProvided() {
+    void updatePaymentTransactionWhenTransactionTypeDataNotProvided() throws Exception {
+        String errorMessage = "Transaction type not provided!";
 
-        ResponseEntity<ResponsePayload<PaymentTransactionDTO>> responseEntity;
-        ResponsePayload<PaymentTransactionDTO> responsePayload;
-        /**
-         * Invalid vendor provided
-         */
-        PaymentTransactionDTO updatedPaymentTransaction = paymentTransactionDTO1;
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(new InvalidDataProvidedException(errorMessage), false, errorMessage));
 
-        // given
-        given(this.vendorService.getVendorById(updatedPaymentTransaction.getVendor().getId())).willReturn(null);
+        paymentTransactionDTO1.setId(1L);
+        paymentTransactionDTO1.setVendor(vendor1);
+        paymentTransactionDTO1.setTransactionType(null);
 
-        // when
-        responseEntity = this.paymentTransactionController.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
-
-        // then
-        responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO responsePaymentTransaction = responsePayload.getPayload();
-
-        assertNull(responsePaymentTransaction);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(1)).getVendorById(any(Long.class));
-//        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
-        verify(this.paymentTransactionService, times(0)).updatePaymentTransaction(any(Long.class), any(PaymentTransactionDTO.class));
-
-        reset(vendorService);
-//        /**
-//         * Invalid Transaction status provided
-//         */
-//
-//        // given
-//        given(this.vendorService.getVendorById(updatedPaymentTransaction.getVendor().getId())).willReturn(updatedPaymentTransaction.getVendor());
-////        given(this.paymentTransactionService.getTransactionStatusById(updatedPaymentTransaction.getId())).willReturn(null);
-//
-//        // when
-//        responseEntity = this.paymentTransactionController.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
-//
-//        // then
-//        responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-//        assert responsePayload != null;
-//        isSuccess = responsePayload.isSuccess();
-//        responsePaymentTransaction = responsePayload.getData();
-//
-//        assertNull(responsePaymentTransaction);
-//        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-//        assertFalse(isSuccess);
-//        verify(this.vendorService, times(1)).getVendorById(any(Long.class));
-////        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(any(Long.class));
-//        verify(this.paymentTransactionService, times(0)).getTransactionTypeById(any(Long.class));
-//        verify(this.paymentTransactionService, times(0)).updatePaymentTransaction(any(Long.class), any(PaymentTransactionDTO.class));
-//
-//
-//        reset(vendorService);
-//        reset(paymentTransactionService);
-
-        /**
-         * Invalid Transaction type provided
-         */
+        String requestBodyJSON = this.objectMapper.writeValueAsString(paymentTransactionDTO1);
 
         // given
-        given(this.vendorService.getVendorById(updatedPaymentTransaction.getVendor().getId())).willReturn(updatedPaymentTransaction.getVendor());
-//        given(this.paymentTransactionService.getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId())).willReturn(updatedPaymentTransaction.getTransactionStatus());
-        given(this.paymentTransactionService.getTransactionTypeById(updatedPaymentTransaction.getTransactionType().getId())).willReturn(null);
+        given(this.paymentTransactionService.updatePaymentTransaction(any(Long.class), any(PaymentTransactionDTO.class))).willThrow(new InvalidDataProvidedException(errorMessage));
 
         // when
-        responseEntity = this.paymentTransactionController.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
-
         // then
-        responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        isSuccess = responsePayload.isSuccess();
-        responsePaymentTransaction = responsePayload.getPayload();
-
-        assertNull(responsePaymentTransaction);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(1)).getVendorById(any(Long.class));
-//        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(any(Long.class));
-        verify(this.paymentTransactionService, times(1)).getTransactionTypeById(any(Long.class));
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/transaction/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBodyJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
         verify(this.paymentTransactionService, times(0)).updatePaymentTransaction(any(Long.class), any(PaymentTransactionDTO.class));
     }
 
@@ -609,156 +462,127 @@ class PaymentTransactionControllerTest {
 
 
     @Test
-    void updatePaymentTransaction() {
+    void updatePaymentTransaction() throws Exception {
+        paymentTransactionDTO1.setId(1L);
+        paymentTransactionDTO1.setVendor(vendor1);
 
-        PaymentTransactionDTO updatedPaymentTransaction = paymentTransactionDTO1;
+        transactionType.setId(1L);
+        paymentTransactionDTO1.setTransactionType(transactionType);
+
+        String requestBodyJSON = this.objectMapper.writeValueAsString(paymentTransactionDTO1);
+
+
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(paymentTransactionDTO1, true, "Payment transaction updated!"));
 
         // given
-        given(this.vendorService.getVendorById(updatedPaymentTransaction.getVendor().getId())).willReturn(updatedPaymentTransaction.getVendor());
-//        given(this.paymentTransactionService.getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId())).willReturn(updatedPaymentTransaction.getTransactionStatus());
-        given(this.paymentTransactionService.getTransactionTypeById(updatedPaymentTransaction.getTransactionType().getId())).willReturn(updatedPaymentTransaction.getTransactionType());
-        given(this.paymentTransactionService.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction)).willReturn(updatedPaymentTransaction);
+        given(this.paymentTransactionService.updatePaymentTransaction(any(Long.class), any(PaymentTransactionDTO.class))).willReturn(paymentTransactionDTO1);
 
         // when
-        ResponseEntity<ResponsePayload<PaymentTransactionDTO>> responseEntity = this.paymentTransactionController.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
-
         // then
-        ResponsePayload<PaymentTransactionDTO> responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO responseUpdatedPaymentTransaction = responsePayload.getPayload();
-
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertTrue(isSuccess);
-        assertEquals(updatedPaymentTransaction, responseUpdatedPaymentTransaction);
-        verify(this.vendorService, times(1)).getVendorById(updatedPaymentTransaction.getVendor().getId());
-//        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId());
-        verify(this.paymentTransactionService, times(1)).getTransactionTypeById(updatedPaymentTransaction.getTransactionType().getId());
-        verify(this.paymentTransactionService, times(1)).updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/transaction/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBodyJSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
+        verify(this.paymentTransactionService, times(1)).updatePaymentTransaction(any(Long.class), any(PaymentTransactionDTO.class));
 
     }
     @Test
-    void updatedVendorDuplicate() {
+    void updatePaymentTransactionWithDuplicateException() throws Exception {
+        paymentTransactionDTO1.setId(1L);
+        paymentTransactionDTO1.setVendor(vendor1);
 
-        PaymentTransactionDTO updatedPaymentTransaction = paymentTransactionDTO1;
+        transactionType.setId(1L);
+        paymentTransactionDTO1.setTransactionType(transactionType);
 
-        // given
-        given(this.vendorService.getVendorById(updatedPaymentTransaction.getVendor().getId())).willReturn(updatedPaymentTransaction.getVendor());
-//        given(this.paymentTransactionService.getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId())).willReturn(updatedPaymentTransaction.getTransactionStatus());
-        given(this.paymentTransactionService.getTransactionTypeById(updatedPaymentTransaction.getTransactionType().getId())).willReturn(updatedPaymentTransaction.getTransactionType());
-        given(this.paymentTransactionService.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction)).willThrow(new DataIntegrityViolationException(""));
+        String requestBodyJSON = this.objectMapper.writeValueAsString(paymentTransactionDTO1);
 
-        // when
-        ResponseEntity<ResponsePayload<PaymentTransactionDTO>> responseEntity = this.paymentTransactionController.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
 
-        // then
-        ResponsePayload<PaymentTransactionDTO> responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO responseUpdatedPaymentTransaction = responsePayload.getPayload();
-
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertNull(responseUpdatedPaymentTransaction);
-        verify(this.vendorService, times(1)).getVendorById(updatedPaymentTransaction.getVendor().getId());
-//        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId());
-        verify(this.paymentTransactionService, times(1)).getTransactionTypeById(updatedPaymentTransaction.getTransactionType().getId());
-        verify(this.paymentTransactionService, times(1)).updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
-
-    }
-
-    @Test
-    void updateVendorInternalServerErr() {
-
-        PaymentTransactionDTO updatedPaymentTransaction = paymentTransactionDTO1;
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(null, false, "ERROR: Duplicate entry!"));
 
         // given
-        given(this.vendorService.getVendorById(updatedPaymentTransaction.getVendor().getId())).willReturn(updatedPaymentTransaction.getVendor());
-//        given(this.paymentTransactionService.getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId())).willReturn(updatedPaymentTransaction.getTransactionStatus());
-        given(this.paymentTransactionService.getTransactionTypeById(updatedPaymentTransaction.getTransactionType().getId())).willReturn(updatedPaymentTransaction.getTransactionType());
-        given(this.paymentTransactionService.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction)).willThrow(new RuntimeException(""));
+        given(this.paymentTransactionService.updatePaymentTransaction(any(Long.class), any(PaymentTransactionDTO.class))).willThrow(new DataIntegrityViolationException(""));
 
         // when
-        ResponseEntity<ResponsePayload<PaymentTransactionDTO>> responseEntity = this.paymentTransactionController.updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
-
         // then
-        ResponsePayload<PaymentTransactionDTO> responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        PaymentTransactionDTO responseUpdatedPaymentTransaction = responsePayload.getPayload();
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertNull(responseUpdatedPaymentTransaction);
-        verify(this.vendorService, times(1)).getVendorById(updatedPaymentTransaction.getVendor().getId());
-//        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(updatedPaymentTransaction.getTransactionStatus().getId());
-        verify(this.paymentTransactionService, times(1)).getTransactionTypeById(updatedPaymentTransaction.getTransactionType().getId());
-        verify(this.paymentTransactionService, times(1)).updatePaymentTransaction(updatedPaymentTransaction.getId(), updatedPaymentTransaction);
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/transaction/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBodyJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
+        verify(this.paymentTransactionService, times(1)).updatePaymentTransaction(any(Long.class), any(PaymentTransactionDTO.class));
 
     }
 
     @Test
-    void deletePaymentTransaction() {
-        // given
-        given(this.paymentTransactionService.getPaymentTransactionById(paymentTransactionDTO1.getId())).willReturn(paymentTransactionDTO1);
-//        given(this.paymentTransactionService.getTransactionStatusById(paymentTransactionDTO1.getTransactionStatus().getId())).willReturn(paymentTransactionDTO1.getTransactionStatus());
+    void updatePaymentTransactionWithInternalServerErr() throws Exception {
+        paymentTransactionDTO1.setId(1L);
+        paymentTransactionDTO1.setVendor(vendor1);
 
+        transactionType.setId(1L);
+        paymentTransactionDTO1.setTransactionType(transactionType);
+
+        String requestBodyJSON = this.objectMapper.writeValueAsString(paymentTransactionDTO1);
+
+
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(null, false, "Something went wrong!"));
+
+        // given
+        given(this.paymentTransactionService.updatePaymentTransaction(any(Long.class), any(PaymentTransactionDTO.class))).willThrow(new RuntimeException(""));
 
         // when
-        ResponseEntity<ResponsePayload<PaymentTransactionDTO>> responseEntity = this.paymentTransactionController.deletePaymentTransaction(paymentTransactionDTO1.getId());
-
         // then
-        ResponsePayload<PaymentTransactionDTO> responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        assertTrue(isSuccess);
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(paymentTransactionDTO1.getId());
-//        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(paymentTransactionDTO1.getId());
-        verify(this.paymentTransactionService, times(1)).deletePaymentTransaction(paymentTransactionDTO1.getId());
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/transaction/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBodyJSON)
+                ).andDo(print())
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
+        verify(this.paymentTransactionService, times(1)).updatePaymentTransaction(any(Long.class), any(PaymentTransactionDTO.class));
+
+    }
+
+    @Test
+    void deletePaymentTransaction() throws Exception {
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(null, true, "Payment transaction has been deleted"));
+
+        // when
+        // then
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.delete("/api/v1/transaction/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
+        verify(this.paymentTransactionService, times(1)).deletePaymentTransaction(any(Long.class));
     }
 
 
-//    @Test
-//    void deletePaymentTransactionWhenPaid() {
-////        TransactionStatus transactionStatus1 = new TransactionStatus(1L, "Paid", 5);
-////        paymentTransactionDTO1.setTransactionStatus(transactionStatus1);
-//        // given
-//        given(this.paymentTransactionService.getPaymentTransactionById(paymentTransactionDTO1.getId())).willReturn(paymentTransactionDTO1);
-////        given(this.paymentTransactionService.getTransactionStatusById(paymentTransactionDTO1.getTransactionStatus().getId())).willReturn(paymentTransactionDTO1.getTransactionStatus());
-//
-//
-//        // when
-//        ResponseEntity<ResponsePayload<PaymentTransactionDTO>> responseEntity = this.paymentTransactionController.deletePaymentTransaction(paymentTransactionDTO1.getId());
-//
-//        // then
-//        ResponsePayload<PaymentTransactionDTO> responseMessage = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-//        assert responseMessage != null;
-//        boolean isSuccess = responseMessage.isSuccess();
-//        assertFalse(isSuccess);
-//        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-//        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(paymentTransactionDTO1.getId());
-////        verify(this.paymentTransactionService, times(1)).getTransactionStatusById(paymentTransactionDTO1.getId());
-//        verify(this.paymentTransactionService, times(0)).deletePaymentTransaction(paymentTransactionDTO1.getId());
-//    }
-
     @Test
-    void deletePaymentTransactionWithNonExistingId() {
-        // given
-        given(this.paymentTransactionService.getPaymentTransactionById(paymentTransactionDTO1.getId())).willReturn(null);
+    void deletePaymentTransactionWithNonExistingId() throws Exception {
+        String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(new InvalidDataProvidedException("Invalid id provided"), false, "Invalid id provided"));
 
+        // given
+        doThrow(new InvalidDataProvidedException("Invalid id provided")).when(this.paymentTransactionService).deletePaymentTransaction(any(Long.class));
 
         // when
-        ResponseEntity<ResponsePayload<PaymentTransactionDTO>> responseEntity = this.paymentTransactionController.deletePaymentTransaction(paymentTransactionDTO1.getId());
-
         // then
-        ResponsePayload<PaymentTransactionDTO> responsePayload = (ResponsePayload<PaymentTransactionDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        assertFalse(isSuccess);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(paymentTransactionDTO1.getId());
-//        verify(this.paymentTransactionService, times(0)).getTransactionStatusById(paymentTransactionDTO1.getId());
-        verify(this.paymentTransactionService, times(0)).deletePaymentTransaction(paymentTransactionDTO1.getId());
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.delete("/api/v1/transaction/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedResponseJSON));
+        verify(this.paymentTransactionService, times(1)).deletePaymentTransaction(any(Long.class));
     }
 }

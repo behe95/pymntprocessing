@@ -31,7 +31,9 @@ public class PaymentTransactionMapper extends BaseMapper<PaymentTransaction, Pay
             }
 
             if (dto.getProductDTO() != null) {
-                paymentTransaction.setProduct(this.modelMapper.map(dto.getProductDTO(), Product.class));
+                Product product = this.modelMapper.map(dto.getProductDTO(), Product.class);
+                product.setPaymentTransaction(paymentTransaction);
+                paymentTransaction.setProduct(product);
             }
         }
         return paymentTransaction;

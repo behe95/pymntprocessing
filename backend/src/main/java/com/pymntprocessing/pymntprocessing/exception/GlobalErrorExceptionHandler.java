@@ -21,17 +21,17 @@ public class GlobalErrorExceptionHandler {
     public ResponseEntity<ResponsePayload<Exception>> handleGenericException(Exception exception) {
         return ResponseEntity
                 .status(ErrorCodes.INITERNAL_SERVER_ERROR.getErrorCode())
-                .body(new ResponsePayload<>(null, false, "Something went wrong! " + exception.getMessage()));
+                .body(new ResponsePayload<>(null, false, ("Something went wrong! " + exception.getMessage()).trim()));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ResponsePayload<DataIntegrityViolationException>> handleDataIntegrityViolationException(DataIntegrityViolationException exception) {
-        String errorMessage = "ERROR: Duplicate entry!";
+        String errorMessage = "ERROR: Duplicate entry! ";
         if (exception.getRootCause() != null) {
             errorMessage = exception.getRootCause().getMessage();
         }
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(new ResponsePayload<>(null, false, errorMessage));
+                .body(new ResponsePayload<>(null, false, errorMessage.trim()));
     }
 }
