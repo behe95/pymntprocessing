@@ -30,10 +30,6 @@ class VendorControllerTest {
 
     @MockBean
     private VendorService vendorService;
-
-    @InjectMocks
-    private  VendorController vendorController;
-
     @Autowired
     private MockMvc mockMvc;
     @Autowired

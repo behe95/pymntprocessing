@@ -1,5 +1,8 @@
 package com.pymntprocessing.pymntprocessing.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pymntprocessing.pymntprocessing.exception.InvalidDataProvidedException;
+import com.pymntprocessing.pymntprocessing.exception.InvoiceNotFoundException;
 import com.pymntprocessing.pymntprocessing.model.dto.InvoiceDTO;
 import com.pymntprocessing.pymntprocessing.model.entity.InvoiceStatus;
 import com.pymntprocessing.pymntprocessing.model.entity.ResponsePayload;
@@ -12,30 +15,43 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(MockitoExtension.class)
+@WebMvcTest(InvoiceController.class)
+@AutoConfigureMockMvc
 class InvoiceControllerTest {
 
 
-    @Mock
+    @MockBean
     private InvoiceService invoiceService;
 
-    @Mock
+    @MockBean
     private VendorService vendorService;
 
-    @InjectMocks
-    private InvoiceController invoiceController;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private InvoiceDTO invoiceDTO1;
     private InvoiceDTO invoiceDTO2;
@@ -72,583 +88,692 @@ class InvoiceControllerTest {
     }
 
     @Test
-    void getAllInvoiceWhenExist() {
+    void getAllInvoiceWhenExist() throws Exception {
         // given
-        given(this.invoiceService.getAllInvoice()).willReturn(List.of(invoiceDTO1, invoiceDTO2));
+        given(this.invoiceService.getAllInvoice()).willReturn(List.of(invoiceDTO1,invoiceDTO2));
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(List.of(invoiceDTO1,invoiceDTO2), true, ""));
 
         // when
-        ResponseEntity<ResponsePayload<List<InvoiceDTO>>> responseEntity = this.invoiceController.getAllInvoice();
-
         // then
-        ResponsePayload<List<InvoiceDTO>> responsePayload = (ResponsePayload<List<InvoiceDTO>>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        List<InvoiceDTO> invoiceDTOS = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/invoice")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertTrue(isSuccess);
-        assertEquals(2, invoiceDTOS.size());
-        verify(this.invoiceService, times(1)).getAllInvoice();
+        then(this.invoiceService).should(times(1)).getAllInvoice();
     }
 
     @Test
-    void getAllInvoiceWhenNotExist() {
+    void getAllInvoiceWhenNotExist() throws Exception {
         // given
         given(this.invoiceService.getAllInvoice()).willReturn(List.of());
 
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(List.of(), true, ""));
+
         // when
-        ResponseEntity<ResponsePayload<List<InvoiceDTO>>> responseEntity = this.invoiceController.getAllInvoice();
-
         // then
-        ResponsePayload<List<InvoiceDTO>> responsePayload = (ResponsePayload<List<InvoiceDTO>>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        List<InvoiceDTO> invoiceDTOS = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/invoice")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertEquals(0, invoiceDTOS.size());
-        verify(this.invoiceService, times(1)).getAllInvoice();
+        then(this.invoiceService).should(times(1)).getAllInvoice();
     }
 
     @Test
-    void getInvoiceByIdWhenFound() {
+    void getInvoiceByIdWhenFound() throws Exception {
+        invoiceDTO1.setId(1L);
         // given
-        given(this.invoiceService.getInvoiceById(1L)).willReturn(invoiceDTO1);
+        given(this.invoiceService.getInvoiceById(any(Long.class))).willReturn(invoiceDTO1);
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(invoiceDTO1, true, ""));
 
         // when
-        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.getInvoiceById(1L);
-
         // then
-        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        InvoiceDTO responseInvoice = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/invoice/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertTrue(isSuccess);
-        assertEquals(invoiceDTO1, responseInvoice);
-        verify(this.invoiceService, times(1)).getInvoiceById(1L);
+        then(this.invoiceService).should(times(1)).getInvoiceById(any(Long.class));
     }
 
     @Test
-    void getInvoiceByIdWhenNotFound() {
+    void getInvoiceByIdWhenNotFound() throws Exception {
+        invoiceDTO1.setId(1L);
         // given
-        given(this.invoiceService.getInvoiceById(11L)).willReturn(null);
+        given(this.invoiceService.getInvoiceById(any(Long.class))).willThrow(new InvoiceNotFoundException());
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(new InvoiceNotFoundException(), false, "Invoice doesn't exist!"));
 
         // when
-        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.getInvoiceById(11L);
-
         // then
-        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert  responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        InvoiceDTO responseInvoice = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/invoice/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertNull(responseInvoice);
-        verify(this.invoiceService, times(1)).getInvoiceById(11L);
+        then(this.invoiceService).should(times(1)).getInvoiceById(any(Long.class));
 
     }
 
     @Test
-    void getAllInvoiceByVendorIdWhenExist() {
+    void getAllInvoiceByVendorIdWhenExist() throws Exception {
         // given
-        given(this.invoiceService.getAllInvoiceByVendorId(1L)).willReturn(List.of(invoiceDTO1, invoiceDTO2));
+        given(this.invoiceService.getAllInvoiceByVendorId(any(Long.class))).willReturn(List.of(invoiceDTO1,invoiceDTO2));
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(List.of(invoiceDTO1,invoiceDTO2), true, ""));
 
         // when
-        ResponseEntity<ResponsePayload<List<InvoiceDTO>>> responseEntity = this.invoiceController.getAllInvoiceByVendorId(1L);
-
         // then
-        ResponsePayload<List<InvoiceDTO>> responsePayload = (ResponsePayload<List<InvoiceDTO>>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        List<InvoiceDTO> responseInvoices = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/invoice/vendor/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertTrue(isSuccess);
-        assertEquals(2, responseInvoices.size());
-        verify(this.invoiceService, times(1)).getAllInvoiceByVendorId(1L);
+        then(this.invoiceService).should(times(1)).getAllInvoiceByVendorId(any(Long.class));
     }
 
 
 
     @Test
-    void getAllInvoiceByVendorIdWhenNotExist() {
+    void getAllInvoiceByVendorIdWhenNotExist() throws Exception {
         // given
-        given(this.invoiceService.getAllInvoiceByVendorId(1L)).willReturn(List.of());
+        given(this.invoiceService.getAllInvoiceByVendorId(any(Long.class))).willReturn(List.of());
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(List.of(), true, ""));
 
         // when
-        ResponseEntity<ResponsePayload<List<InvoiceDTO>>> responseEntity = this.invoiceController.getAllInvoiceByVendorId(1L);
-
         // then
-        ResponsePayload<List<InvoiceDTO>> responsePayload = (ResponsePayload<List<InvoiceDTO>>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        List<InvoiceDTO> responseInvoices = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/invoice/vendor/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertEquals(0, responseInvoices.size());
-        verify(this.invoiceService, times(1)).getAllInvoiceByVendorId(1L);
+        then(this.invoiceService).should(times(1)).getAllInvoiceByVendorId(any(Long.class));
     }
 
     @Test
-    void createInvoiceWhenDataNotProvided() {
-
-        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity;
-        ResponsePayload<InvoiceDTO> responsePayload;
+    void createInvoiceWhenVendorDataNotProvided() throws Exception {
         /**
          * Vendor not provided
          */
         InvoiceDTO newInvoice = invoiceDTO1;
         newInvoice.setVendor(null);
 
+        String requestJSON = this.objectMapper.writeValueAsString(newInvoice);
+
+        String errorMessage = "Vendor information not provided!";
+
+        // given
+        given(this.invoiceService.createInvoice(any(InvoiceDTO.class))).willThrow(new InvalidDataProvidedException(errorMessage));
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(new InvalidDataProvidedException(errorMessage), false, errorMessage));
+
         // when
-        responseEntity = this.invoiceController.createInvoice(newInvoice);
-
         // then
-        responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.post("/api/v1/invoice")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(0)).getVendorById(any(Long.class));
-        verify(this.invoiceService, times(0)).getInvoiceStatusById(any(Long.class));
-        verify(this.invoiceService, times(0)).createInvoice(any(InvoiceDTO.class));
+        then(this.invoiceService).should(times(0)).createInvoice(any(InvoiceDTO.class));
+
+
+    }
+
+
+    @Test
+    void createInvoiceWhenInvoiceStatusDataNotProvided() throws Exception {
 
         /**
          * InvoiceDTO status not provided
          */
-        newInvoice.setVendor(vendor1);
+        InvoiceDTO newInvoice = invoiceDTO1;
         newInvoice.setInvoiceStatus(null);
 
+        String requestJSON = this.objectMapper.writeValueAsString(newInvoice);
+
+        String errorMessage = "Invoice status not provided!";
+        // given
+        given(this.invoiceService.createInvoice(any(InvoiceDTO.class))).willThrow(new InvalidDataProvidedException(errorMessage));
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(new InvalidDataProvidedException(errorMessage), false, errorMessage));
+
         // when
-        responseEntity = this.invoiceController.createInvoice(newInvoice);
-
         // then
-        responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        isSuccess = responsePayload.isSuccess();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.post("/api/v1/invoice")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(0)).getVendorById(any(Long.class));
-        verify(this.invoiceService, times(0)).getInvoiceStatusById(any(Long.class));
-        verify(this.invoiceService, times(0)).createInvoice(any(InvoiceDTO.class));
+        then(this.invoiceService).should(times(0)).createInvoice(any(InvoiceDTO.class));
 
 
     }
-
     @Test
-    void createInvoiceWhenInvalidDataProvided() {
-
-        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity;
-        ResponsePayload<InvoiceDTO> responsePayload;
+    void createInvoiceWhenInvalidVendorDataProvided() throws Exception {
         /**
-         * Invalid vendor provided
+         * Vendor not provided
          */
         InvoiceDTO newInvoice = invoiceDTO1;
+        newInvoice.setVendor(vendor1);
+
+        String requestJSON = this.objectMapper.writeValueAsString(newInvoice);
+
+        String errorMessage = "Invalid vendor provided!";
 
         // given
-        given(this.vendorService.getVendorById(newInvoice.getVendor().getId())).willReturn(null);
+        given(this.invoiceService.createInvoice(any(InvoiceDTO.class))).willThrow(new InvalidDataProvidedException(errorMessage));
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(new InvalidDataProvidedException(errorMessage), false, errorMessage));
 
         // when
-        responseEntity = this.invoiceController.createInvoice(newInvoice);
-
         // then
-        responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        InvoiceDTO responseInvoice = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.post("/api/v1/invoice")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertNull(responseInvoice);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(1)).getVendorById(any(Long.class));
-        verify(this.invoiceService, times(0)).getInvoiceStatusById(any(Long.class));
-        verify(this.invoiceService, times(0)).createInvoice(any(InvoiceDTO.class));
+        then(this.invoiceService).should(times(1)).createInvoice(any(InvoiceDTO.class));
 
-        reset(vendorService);
+
+    }
+
+
+    @Test
+    void createInvoiceWhenInvalidInvoiceStatusDataProvided() throws Exception {
+
         /**
-         * Invalid Transaction status provided
+         * InvoiceDTO status not provided
          */
+        InvoiceDTO newInvoice = invoiceDTO1;
+        newInvoice.setInvoiceStatus(invoiceStatus);
 
+        String requestJSON = this.objectMapper.writeValueAsString(newInvoice);
+
+        String errorMessage = "Invalid status provided!";
         // given
-        given(this.vendorService.getVendorById(newInvoice.getVendor().getId())).willReturn(newInvoice.getVendor());
-        given(this.invoiceService.getInvoiceStatusById(newInvoice.getId())).willReturn(null);
+        given(this.invoiceService.createInvoice(any(InvoiceDTO.class))).willThrow(new InvalidDataProvidedException(errorMessage));
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(new InvalidDataProvidedException(errorMessage), false, errorMessage));
 
         // when
-        responseEntity = this.invoiceController.createInvoice(newInvoice);
-
         // then
-        responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        isSuccess = responsePayload.isSuccess();
-        responseInvoice = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.post("/api/v1/invoice")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertNull(responseInvoice);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(1)).getVendorById(any(Long.class));
-        verify(this.invoiceService, times(1)).getInvoiceStatusById(any(Long.class));
-        verify(this.invoiceService, times(0)).createInvoice(any(InvoiceDTO.class));
-
-
-        reset(vendorService);
-        reset(invoiceService);
+        then(this.invoiceService).should(times(1)).createInvoice(any(InvoiceDTO.class));
 
 
     }
 
-
-
-
     @Test
-    void createInvoice() {
+    void createInvoice() throws Exception {
 
         InvoiceDTO newInvoice = invoiceDTO1;
 
+        String requestJSON = this.objectMapper.writeValueAsString(newInvoice);
         // given
-        given(this.vendorService.getVendorById(newInvoice.getVendor().getId())).willReturn(newInvoice.getVendor());
-        given(this.invoiceService.getInvoiceStatusById(newInvoice.getInvoiceStatus().getId())).willReturn(newInvoice.getInvoiceStatus());
-        given(this.invoiceService.createInvoice(newInvoice)).willReturn(newInvoice);
+        given(this.invoiceService.createInvoice(any(InvoiceDTO.class))).willReturn(newInvoice);
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(newInvoice, true, "Invoice created!"));
 
         // when
-        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.createInvoice(newInvoice);
-
         // then
-        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        InvoiceDTO createdInvoice = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.post("/api/v1/invoice")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
-        assertTrue(isSuccess);
-        assertEquals(newInvoice, createdInvoice);
-        verify(this.vendorService, times(1)).getVendorById(newInvoice.getVendor().getId());
-        verify(this.invoiceService, times(1)).getInvoiceStatusById(newInvoice.getInvoiceStatus().getId());
-        verify(this.invoiceService, times(1)).createInvoice(newInvoice);
+        then(this.invoiceService).should(times(1)).createInvoice(any(InvoiceDTO.class));
 
     }
     @Test
-    void createVendorDuplicate() {
+    void createInvoiceDuplicate() throws Exception {
 
         InvoiceDTO newInvoice = invoiceDTO1;
 
+        String requestJSON = this.objectMapper.writeValueAsString(newInvoice);
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(null, false, "ERROR: Duplicate entry! Duplicate entry "+ newInvoice.getInvoiceNumber()+" for key 'vendor.vendorId'"));
+
         // given
-        given(this.vendorService.getVendorById(newInvoice.getVendor().getId())).willReturn(newInvoice.getVendor());
-        given(this.invoiceService.getInvoiceStatusById(newInvoice.getInvoiceStatus().getId())).willReturn(newInvoice.getInvoiceStatus());
-        given(this.invoiceService.createInvoice(newInvoice)).willThrow(new DataIntegrityViolationException(""));
+        given(this.invoiceService.createInvoice(any(InvoiceDTO.class))).willThrow(new DataIntegrityViolationException("Duplicate entry "+ newInvoice.getInvoiceNumber()+" for key 'vendor.vendorId'"));
+
 
         // when
-        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.createInvoice(newInvoice);
-
         // then
-        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        InvoiceDTO createdInvoice = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.post("/api/v1/invoice")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertNull(createdInvoice);
-        verify(this.vendorService, times(1)).getVendorById(newInvoice.getVendor().getId());
-        verify(this.invoiceService, times(1)).getInvoiceStatusById(newInvoice.getInvoiceStatus().getId());
-        verify(this.invoiceService, times(1)).createInvoice(newInvoice);
+        then(this.invoiceService).should(times(1)).createInvoice(any(InvoiceDTO.class));
 
     }
 
     @Test
-    void createVendorInternalServerErr() {
+    void createInvoiceInternalServerErr() throws Exception {
 
         InvoiceDTO newInvoice = invoiceDTO1;
 
+
+        String requestJSON = this.objectMapper.writeValueAsString(newInvoice);
+
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(null, false, "Something went wrong! Additional Error Message"));
+
         // given
-        given(this.vendorService.getVendorById(newInvoice.getVendor().getId())).willReturn(newInvoice.getVendor());
-        given(this.invoiceService.getInvoiceStatusById(newInvoice.getInvoiceStatus().getId())).willReturn(newInvoice.getInvoiceStatus());
-        given(this.invoiceService.createInvoice(newInvoice)).willThrow(new RuntimeException(""));
+        given(this.invoiceService.createInvoice(any(InvoiceDTO.class))).willThrow(new RuntimeException("Additional Error Message"));
 
         // when
-        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.createInvoice(newInvoice);
-
         // then
-        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        InvoiceDTO createdInvoice = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.post("/api/v1/invoice")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertNull(createdInvoice);
-        verify(this.vendorService, times(1)).getVendorById(newInvoice.getVendor().getId());
-        verify(this.invoiceService, times(1)).getInvoiceStatusById(newInvoice.getInvoiceStatus().getId());
-        verify(this.invoiceService, times(1)).createInvoice(newInvoice);
+        then(this.invoiceService).should(times(1)).createInvoice(any(InvoiceDTO.class));
 
     }
 
 
-
-
     @Test
-    void updateInvoiceWhenDataNotProvided() {
-
-        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity;
-        ResponsePayload<InvoiceDTO> responsePayload;
+    void updateInvoiceWhenVendorDataNotProvided() throws Exception {
         /**
          * Vendor not provided
          */
         InvoiceDTO updatedInvoice = invoiceDTO1;
+        updatedInvoice.setId(1L);
         updatedInvoice.setVendor(null);
 
+        String requestJSON = this.objectMapper.writeValueAsString(updatedInvoice);
+
+        String errorMessage = "Vendor information not provided!";
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(new InvalidDataProvidedException(errorMessage), false, errorMessage));
+
         // when
-        responseEntity = this.invoiceController.updateInvoice(updatedInvoice.getId(), updatedInvoice);
-
         // then
-        responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/invoice/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(0)).getVendorById(any(Long.class));
-        verify(this.invoiceService, times(0)).getInvoiceStatusById(any(Long.class));
-        verify(this.invoiceService, times(0)).updateInvoice(any(Long.class),any(InvoiceDTO.class));
+        then(this.invoiceService).should(times(0)).updateInvoice(any(Long.class), any(InvoiceDTO.class));
+
+
+    }
+
+
+    @Test
+    void updateInvoiceWhenInvoiceStatusDataNotProvided() throws Exception {
 
         /**
          * InvoiceDTO status not provided
          */
-        updatedInvoice.setVendor(vendor1);
+        InvoiceDTO updatedInvoice = invoiceDTO1;
+        updatedInvoice.setId(1L);
         updatedInvoice.setInvoiceStatus(null);
 
+        String requestJSON = this.objectMapper.writeValueAsString(updatedInvoice);
+
+        String errorMessage = "Invoice status not provided!";
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(new InvalidDataProvidedException(errorMessage), false, errorMessage));
+
         // when
-        responseEntity = this.invoiceController.updateInvoice(updatedInvoice.getId(), updatedInvoice);
-
         // then
-        responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        isSuccess = responsePayload.isSuccess();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/invoice/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(0)).getVendorById(any(Long.class));
-        verify(this.invoiceService, times(0)).getInvoiceStatusById(any(Long.class));
-        verify(this.invoiceService, times(0)).updateInvoice(any(Long.class),any(InvoiceDTO.class));
+        then(this.invoiceService).should(times(0)).updateInvoice(any(Long.class), any(InvoiceDTO.class));
 
 
     }
 
-    @Test
-    void updateInvoiceWhenInvalidDataProvided() {
 
-        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity;
-        ResponsePayload<InvoiceDTO> responsePayload;
+    @Test
+    void updateInvoiceWhenInvoiceIdNotExist() throws Exception {
         /**
-         * Invalid vendor provided
+         * Vendor not provided
          */
         InvoiceDTO updatedInvoice = invoiceDTO1;
+        updatedInvoice.setId(1L);
+        updatedInvoice.setVendor(vendor1);
+
+        String requestJSON = this.objectMapper.writeValueAsString(updatedInvoice);
+
+        String errorMessage = "Invoice doesn't exist!";
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(new InvoiceNotFoundException(), false, errorMessage));
+
 
         // given
-        given(this.vendorService.getVendorById(updatedInvoice.getVendor().getId())).willReturn(null);
+        given(this.invoiceService.updateInvoice(any(Long.class), any(InvoiceDTO.class))).willThrow(new InvoiceNotFoundException());
 
         // when
-        responseEntity = this.invoiceController.updateInvoice(updatedInvoice.getId(), updatedInvoice);
-
         // then
-        responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        InvoiceDTO responseInvoice = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/invoice/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertNull(responseInvoice);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(1)).getVendorById(any(Long.class));
-        verify(this.invoiceService, times(0)).getInvoiceStatusById(any(Long.class));
-        verify(this.invoiceService, times(0)).updateInvoice(any(Long.class), any(InvoiceDTO.class));
+        then(this.invoiceService).should(times(1)).updateInvoice(any(Long.class), any(InvoiceDTO.class));
 
-        reset(vendorService);
+
+    }
+
+    @Test
+    void updateInvoiceWhenInvalidVendorDataProvided() throws Exception {
         /**
-         * Invalid Transaction status provided
+         * Vendor not provided
          */
+        InvoiceDTO updatedInvoice = invoiceDTO1;
+        updatedInvoice.setId(1L);
+        updatedInvoice.setVendor(vendor1);
+
+        String requestJSON = this.objectMapper.writeValueAsString(updatedInvoice);
+
+        String errorMessage = "Invalid vendor provided!";
 
         // given
-        given(this.vendorService.getVendorById(updatedInvoice.getVendor().getId())).willReturn(updatedInvoice.getVendor());
-//        given(this.invoiceService.getInvoiceStatusById(updatedInvoice.getId())).willReturn(null);
+        given(this.invoiceService.updateInvoice(any(Long.class), any(InvoiceDTO.class))).willThrow(new InvalidDataProvidedException(errorMessage));
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(new InvalidDataProvidedException(errorMessage), false, errorMessage));
 
         // when
-        responseEntity = this.invoiceController.updateInvoice(updatedInvoice.getId(), updatedInvoice);
-
         // then
-        responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        isSuccess = responsePayload.isSuccess();
-        responseInvoice = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/invoice/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertNull(responseInvoice);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        verify(this.vendorService, times(1)).getVendorById(any(Long.class));
-        verify(this.invoiceService, times(1)).getInvoiceStatusById(any(Long.class));
-        verify(this.invoiceService, times(0)).updateInvoice(any(Long.class), any(InvoiceDTO.class));
+        then(this.invoiceService).should(times(1)).updateInvoice(any(Long.class), any(InvoiceDTO.class));
 
 
-        reset(vendorService);
-        reset(invoiceService);
+    }
+
+
+    @Test
+    void updateInvoiceWhenInvalidInvoiceStatusDataProvided() throws Exception {
+
+        /**
+         * InvoiceDTO status not provided
+         */
+        InvoiceDTO newInvoice = invoiceDTO1;
+        newInvoice.setInvoiceStatus(invoiceStatus);
+
+        String requestJSON = this.objectMapper.writeValueAsString(newInvoice);
+
+        String errorMessage = "Invalid transaction status provided!";
+        // given
+        given(this.invoiceService.updateInvoice(any(Long.class), any(InvoiceDTO.class))).willThrow(new InvalidDataProvidedException(errorMessage));
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(new InvalidDataProvidedException(errorMessage), false, errorMessage));
+
+        // when
+        // then
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/invoice/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
+
+        then(this.invoiceService).should(times(1)).updateInvoice(any(Long.class), any(InvoiceDTO.class));
 
 
     }
 
 
 
-
     @Test
-    void updateInvoice() {
+    void updateInvoice() throws Exception {
+
+        InvoiceDTO newInvoice = invoiceDTO1;
+
+        String requestJSON = this.objectMapper.writeValueAsString(newInvoice);
+        // given
+        given(this.invoiceService.updateInvoice(any(Long.class), any(InvoiceDTO.class))).willReturn(newInvoice);
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(newInvoice, true, "Invoice has been updated!"));
+
+        // when
+        // then
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/invoice/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
+
+        then(this.invoiceService).should(times(1)).updateInvoice(any(Long.class), any(InvoiceDTO.class));
+
+    }
+    @Test
+    void updateInvoiceDuplicate() throws Exception {
 
         InvoiceDTO updatedInvoice = invoiceDTO1;
 
+        String requestJSON = this.objectMapper.writeValueAsString(updatedInvoice);
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(null, false, "ERROR: Duplicate entry! Duplicate entry "+ updatedInvoice.getInvoiceNumber()+" for key 'vendor.vendorId'"));
+
         // given
-        given(this.vendorService.getVendorById(updatedInvoice.getVendor().getId())).willReturn(updatedInvoice.getVendor());
-        given(this.invoiceService.getInvoiceStatusById(updatedInvoice.getInvoiceStatus().getId())).willReturn(updatedInvoice.getInvoiceStatus());
-        given(this.invoiceService.updateInvoice(updatedInvoice.getId(), updatedInvoice)).willReturn(updatedInvoice);
+        given(this.invoiceService.updateInvoice(any(Long.class), any(InvoiceDTO.class))).willThrow(new DataIntegrityViolationException("Duplicate entry "+ updatedInvoice.getInvoiceNumber()+" for key 'vendor.vendorId'"));
+
 
         // when
-        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.updateInvoice(updatedInvoice.getId(), updatedInvoice);
-
         // then
-        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        InvoiceDTO responseUpdatedInvoice = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/invoice/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertTrue(isSuccess);
-        assertEquals(updatedInvoice, responseUpdatedInvoice);
-        verify(this.vendorService, times(1)).getVendorById(updatedInvoice.getVendor().getId());
-        verify(this.invoiceService, times(1)).getInvoiceStatusById(updatedInvoice.getInvoiceStatus().getId());
-        verify(this.invoiceService, times(1)).updateInvoice(updatedInvoice.getId(), updatedInvoice);
+        then(this.invoiceService).should(times(1)).updateInvoice(any(Long.class), any(InvoiceDTO.class));
 
     }
+
     @Test
-    void updatedVendorDuplicate() {
+    void updateInvoiceInternalServerErr() throws Exception {
 
         InvoiceDTO updatedInvoice = invoiceDTO1;
 
-        // given
-        given(this.vendorService.getVendorById(updatedInvoice.getVendor().getId())).willReturn(updatedInvoice.getVendor());
-        given(this.invoiceService.getInvoiceStatusById(updatedInvoice.getInvoiceStatus().getId())).willReturn(updatedInvoice.getInvoiceStatus());
-        given(this.invoiceService.updateInvoice(updatedInvoice.getId(), updatedInvoice)).willThrow(new DataIntegrityViolationException(""));
 
-        // when
-        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.updateInvoice(updatedInvoice.getId(), updatedInvoice);
+        String requestJSON = this.objectMapper.writeValueAsString(updatedInvoice);
 
-        // then
-        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        InvoiceDTO responseUpdatedInvoice = responsePayload.getPayload();
 
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertNull(responseUpdatedInvoice);
-        verify(this.vendorService, times(1)).getVendorById(updatedInvoice.getVendor().getId());
-        verify(this.invoiceService, times(1)).getInvoiceStatusById(updatedInvoice.getInvoiceStatus().getId());
-        verify(this.invoiceService, times(1)).updateInvoice(updatedInvoice.getId(), updatedInvoice);
-
-    }
-
-    @Test
-    void updateVendorInternalServerErr() {
-
-        InvoiceDTO updatedInvoice = invoiceDTO1;
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(null, false, "Something went wrong! Additional Error Message"));
 
         // given
-        given(this.vendorService.getVendorById(updatedInvoice.getVendor().getId())).willReturn(updatedInvoice.getVendor());
-        given(this.invoiceService.getInvoiceStatusById(updatedInvoice.getInvoiceStatus().getId())).willReturn(updatedInvoice.getInvoiceStatus());
-        given(this.invoiceService.updateInvoice(updatedInvoice.getId(), updatedInvoice)).willThrow(new RuntimeException(""));
+        given(this.invoiceService.updateInvoice(any(Long.class), any(InvoiceDTO.class))).willThrow(new RuntimeException("Additional Error Message"));
 
         // when
-        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.updateInvoice(updatedInvoice.getId(), updatedInvoice);
-
         // then
-        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        InvoiceDTO responseUpdatedInvoice = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/invoice/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertNull(responseUpdatedInvoice);
-        verify(this.vendorService, times(1)).getVendorById(updatedInvoice.getVendor().getId());
-        verify(this.invoiceService, times(1)).getInvoiceStatusById(updatedInvoice.getInvoiceStatus().getId());
-        verify(this.invoiceService, times(1)).updateInvoice(updatedInvoice.getId(), updatedInvoice);
+        then(this.invoiceService).should(times(1)).updateInvoice(any(Long.class), any(InvoiceDTO.class));
 
-    }
-
-    @Test
-    void deleteInvoice() {
-        // given
-        given(this.invoiceService.getInvoiceById(invoiceDTO1.getId())).willReturn(invoiceDTO1);
-        given(this.invoiceService.getInvoiceStatusById(invoiceDTO1.getInvoiceStatus().getId())).willReturn(invoiceDTO1.getInvoiceStatus());
-
-
-        // when
-        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.deleteInvoice(invoiceDTO1.getId());
-
-        // then
-        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        assertTrue(isSuccess);
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        verify(this.invoiceService, times(1)).getInvoiceById(invoiceDTO1.getId());
-        verify(this.invoiceService, times(1)).getInvoiceStatusById(invoiceDTO1.getId());
-        verify(this.invoiceService, times(1)).deleteInvoice(invoiceDTO1.getId());
     }
 
 
     @Test
-    void deleteInvoiceWhenPaid() {
-        InvoiceStatus invoiceStatus1 = new InvoiceStatus(1L, "Paid", 5);
-        invoiceDTO1.setInvoiceStatus(invoiceStatus1);
-        // given
-        given(this.invoiceService.getInvoiceById(invoiceDTO1.getId())).willReturn(invoiceDTO1);
-        given(this.invoiceService.getInvoiceStatusById(invoiceDTO1.getInvoiceStatus().getId())).willReturn(invoiceDTO1.getInvoiceStatus());
+    void deleteInvoice() throws Exception {
 
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(null, true, "Invoice has been deleted!"));
 
         // when
-        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.deleteInvoice(invoiceDTO1.getId());
-
         // then
-        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        assertFalse(isSuccess);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        verify(this.invoiceService, times(1)).getInvoiceById(invoiceDTO1.getId());
-        verify(this.invoiceService, times(1)).getInvoiceStatusById(invoiceDTO1.getId());
-        verify(this.invoiceService, times(0)).deleteInvoice(invoiceDTO1.getId());
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.delete("/api/v1/invoice/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
+
+        then(this.invoiceService).should(times(1)).deleteInvoice(any(Long.class));
+    }
+
+
+    @Test
+    void deleteInvoiceWhenPaid() throws Exception {
+
+        InvoiceDTO newInvoice = invoiceDTO1;
+        newInvoice.setInvoiceStatus(invoiceStatus);
+
+        String requestJSON = this.objectMapper.writeValueAsString(newInvoice);
+
+        String errorMessage = "Unable to delete transaction. Transaction status: " + invoiceStatus.getName();
+        // given
+        willThrow(new InvalidDataProvidedException(errorMessage)).given(this.invoiceService).deleteInvoice(any(Long.class));
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(new InvalidDataProvidedException(errorMessage), false, errorMessage));
+
+        // when
+        // then
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.delete("/api/v1/invoice/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
+
+        then(this.invoiceService).should(times(1)).deleteInvoice(any(Long.class));
+
+
+
     }
 
     @Test
-    void deleteInvoiceWithNonExistingId() {
-        // given
-        given(this.invoiceService.getInvoiceById(invoiceDTO1.getId())).willReturn(null);
+    void deleteInvoiceWithNonExistingId() throws Exception {
 
+        InvoiceDTO newInvoice = invoiceDTO1;
+        newInvoice.setInvoiceStatus(invoiceStatus);
+
+        String errorMessage = "Invoice doesn't exist!";
+        // given
+        willThrow(new InvoiceNotFoundException()).given(this.invoiceService).deleteInvoice(any(Long.class));
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(new InvoiceNotFoundException(), false, errorMessage));
 
         // when
-        ResponseEntity<ResponsePayload<InvoiceDTO>> responseEntity = this.invoiceController.deleteInvoice(invoiceDTO1.getId());
-
         // then
-        ResponsePayload<InvoiceDTO> responsePayload = (ResponsePayload<InvoiceDTO>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        assertFalse(isSuccess);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        verify(this.invoiceService, times(1)).getInvoiceById(invoiceDTO1.getId());
-        verify(this.invoiceService, times(0)).getInvoiceStatusById(invoiceDTO1.getId());
-        verify(this.invoiceService, times(0)).deleteInvoice(invoiceDTO1.getId());
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.delete("/api/v1/invoice/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
+
+        then(this.invoiceService).should(times(1)).deleteInvoice(any(Long.class));
     }
 }
