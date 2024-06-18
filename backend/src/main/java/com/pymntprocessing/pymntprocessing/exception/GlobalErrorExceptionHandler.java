@@ -27,8 +27,17 @@ public class GlobalErrorExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ResponsePayload<DataIntegrityViolationException>> handleDataIntegrityViolationException(DataIntegrityViolationException exception) {
         String errorMessage = "ERROR: Duplicate entry! ";
+
+        if (exception.getMessage() != null) {
+            errorMessage += exception.getMessage();
+        }
+
+        if (exception.getCause() != null) {
+            errorMessage += exception.getCause().getMessage();
+        }
+
         if (exception.getRootCause() != null) {
-            errorMessage = exception.getRootCause().getMessage();
+            errorMessage += exception.getRootCause().getMessage();
         }
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)

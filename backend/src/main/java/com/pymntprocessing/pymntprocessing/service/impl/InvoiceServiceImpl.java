@@ -1,4 +1,4 @@
-package com.pymntprocessing.pymntprocessing.service;
+package com.pymntprocessing.pymntprocessing.service.impl;
 
 import com.pymntprocessing.pymntprocessing.model.mapper.InvoiceMapper;
 import com.pymntprocessing.pymntprocessing.model.dto.InvoiceDTO;
@@ -8,6 +8,7 @@ import com.pymntprocessing.pymntprocessing.model.entity.InvoiceStatus;
 import com.pymntprocessing.pymntprocessing.model.mapper.PaymentTransactionMapper;
 import com.pymntprocessing.pymntprocessing.repository.InvoiceRepository;
 import com.pymntprocessing.pymntprocessing.repository.InvoiceStatusRepository;
+import com.pymntprocessing.pymntprocessing.service.InvoiceService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class InvoiceServiceImpl implements InvoiceService{
+public class InvoiceServiceImpl implements InvoiceService {
 
     private final InvoiceRepository invoiceRepository;
     private final InvoiceStatusRepository invoiceStatusRepository;

@@ -1,4 +1,4 @@
-package com.pymntprocessing.pymntprocessing.service;
+package com.pymntprocessing.pymntprocessing.service.impl;
 
 import com.pymntprocessing.pymntprocessing.constant.db.TransactionTypeValue;
 import com.pymntprocessing.pymntprocessing.exception.InvalidDataProvidedException;
@@ -10,6 +10,8 @@ import com.pymntprocessing.pymntprocessing.model.entity.PaymentTransaction;
 import com.pymntprocessing.pymntprocessing.model.entity.TransactionType;
 import com.pymntprocessing.pymntprocessing.repository.PaymentTransactionRepository;
 import com.pymntprocessing.pymntprocessing.repository.TransactionTypeRepository;
+import com.pymntprocessing.pymntprocessing.service.PaymentTransactionService;
+import com.pymntprocessing.pymntprocessing.service.VendorService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,7 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Service
-public class PaymentTransactionImpl implements PaymentTransactionService{
+public class PaymentTransactionImpl implements PaymentTransactionService {
 
     private final PaymentTransactionRepository paymentTransactionRepository;
     private final TransactionTypeRepository transactionTypeRepository;

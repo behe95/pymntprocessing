@@ -1,4 +1,4 @@
-package com.pymntprocessing.pymntprocessing.service;
+package com.pymntprocessing.pymntprocessing.service.impl;
 
 import com.pymntprocessing.pymntprocessing.exception.ProductAssignedWithInvalidPaymentTransactionException;
 import com.pymntprocessing.pymntprocessing.exception.ProductNotFoundException;
@@ -8,6 +8,8 @@ import com.pymntprocessing.pymntprocessing.model.mapper.ProductMapper;
 import com.pymntprocessing.pymntprocessing.model.dto.ProductDTO;
 import com.pymntprocessing.pymntprocessing.model.entity.Product;
 import com.pymntprocessing.pymntprocessing.repository.ProductRepository;
+import com.pymntprocessing.pymntprocessing.service.PaymentTransactionService;
+import com.pymntprocessing.pymntprocessing.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +20,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Service
-public class ProductServiceImpl implements ProductService{
+public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
 

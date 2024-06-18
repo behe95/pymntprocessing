@@ -1,32 +1,43 @@
 package com.pymntprocessing.pymntprocessing.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pymntprocessing.pymntprocessing.exception.VendorNotFoundException;
 import com.pymntprocessing.pymntprocessing.model.entity.ResponsePayload;
 import com.pymntprocessing.pymntprocessing.model.entity.Vendor;
 import com.pymntprocessing.pymntprocessing.service.VendorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(MockitoExtension.class)
+@WebMvcTest(VendorController.class)
+@AutoConfigureMockMvc
 class VendorControllerTest {
 
-    @Mock
+    @MockBean
     private VendorService vendorService;
 
     @InjectMocks
     private  VendorController vendorController;
 
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
     private Vendor vendor1;
     private Vendor vendor2;
 
@@ -47,276 +58,337 @@ class VendorControllerTest {
     }
 
     @Test
-    void getVendorByIdWhenFound() {
+    void getVendorByIdWhenFound() throws Exception {
         // given
-        given(this.vendorService.getVendorById(1L)).willReturn(vendor1);
+        given(this.vendorService.getVendorById(any(Long.class))).willReturn(vendor1);
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(vendor1, true, ""));
 
         // when
-        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.getVendorById(1L);
-
         // then
-        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        Vendor responseVendor = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/vendor/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertTrue(isSuccess);
-        assertEquals(vendor1, responseVendor);
-        verify(this.vendorService, times(1)).getVendorById(1L);
+        then(this.vendorService).should(times(1)).getVendorById(any(Long.class));
 
     }
 
     @Test
-    void getVendorByIdWhenNotFound() {
+    void getVendorByIdWhenNotFound() throws Exception {
         // given
-        given(this.vendorService.getVendorById(11L)).willReturn(null);
+        given(this.vendorService.getVendorById(any(Long.class))).willThrow(new VendorNotFoundException());
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(new VendorNotFoundException(), false, "Vendor doesn't exist!"));
 
         // when
-        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.getVendorById(11L);
-
         // then
-        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        Vendor responseVendor = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/vendor/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertNull(responseVendor);
-        verify(this.vendorService, times(1)).getVendorById(11L);
+        then(this.vendorService).should(times(1)).getVendorById(any(Long.class));
 
     }
 
     @Test
-    void getAllVendorsWhenExist() {
+    void getAllVendorsWhenExist() throws Exception {
         // given
-        given(this.vendorService.getAllVendors()).willReturn(List.of(vendor1, vendor2));
+        given(this.vendorService.getAllVendors()).willReturn(List.of(vendor1,vendor2));
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(List.of(vendor1,vendor2), true, ""));
 
         // when
-        ResponseEntity<ResponsePayload<List<Vendor>>> responseEntity = this.vendorController.getAllVendors();
-
         // then
-        ResponsePayload<List<Vendor>> responsePayload = (ResponsePayload<List<Vendor>>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        List<Vendor> vendors = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/vendor")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertTrue(isSuccess);
-        assertEquals(2, vendors.size());
-        verify(this.vendorService, times(1)).getAllVendors();
+        then(this.vendorService).should(times(1)).getAllVendors();
     }
     @Test
-    void getAllVendorsWhenNotExist() {
+    void getAllVendorsWhenNotExist() throws Exception {
         // given
         given(this.vendorService.getAllVendors()).willReturn(List.of());
 
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(List.of(), true, ""));
+
         // when
-        ResponseEntity<ResponsePayload<List<Vendor>>> responseEntity = this.vendorController.getAllVendors();
-
         // then
-        ResponsePayload<List<Vendor>> responsePayload = (ResponsePayload<List<Vendor>>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        List<Vendor> vendors = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.get("/api/v1/vendor")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertEquals(0, vendors.size());
-        verify(this.vendorService, times(1)).getAllVendors();
+        then(this.vendorService).should(times(1)).getAllVendors();
     }
 
 
 
 
     @Test
-    void createVendor() {
+    void createVendor() throws Exception {
 
         Vendor vendor = new Vendor();
-        vendor.setId(3L);
+        vendor.setId(null);
         vendor.setName("New Vendor");
         vendor.setAddress("121 Demo Ave, LA");
         vendor.setVendorId("EVID0003");
 
+        Vendor createdVendor = new Vendor();
+        createdVendor.setId(1L);
+        createdVendor.setName("New Vendor");
+        createdVendor.setAddress("121 Demo Ave, LA");
+        createdVendor.setVendorId("EVID0003");
+
         // given
-        given(this.vendorService.createVendor(vendor)).willReturn(vendor);
+        given(this.vendorService.createVendor(any(Vendor.class))).willReturn(createdVendor);
+
+        String requestJSON = this.objectMapper.writeValueAsString(vendor);
+
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(createdVendor, true, "Vendor " + createdVendor.getName() + " created successfully!"));
 
         // when
-        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.createVendor(vendor);
-
         // then
-        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        Vendor createdVendor = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.post("/api/v1/vendor")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
-        assertTrue(isSuccess);
-        assertEquals(vendor, createdVendor);
-        verify(this.vendorService, times(1)).createVendor(vendor);
+        then(this.vendorService).should(times(1)).createVendor(any(Vendor.class));
 
     }
     @Test
-    void createVendorDuplicate() {
+    void createVendorDuplicate() throws Exception {
 
         Vendor vendor = new Vendor();
-        vendor.setId(2L);
+        vendor.setId(null);
         vendor.setName("New Vendor");
         vendor.setAddress("121 Demo Ave, LA");
-        vendor.setVendorId("EVID0002");
+        vendor.setVendorId("EVID0003");
+
+        String requestJSON = this.objectMapper.writeValueAsString(vendor);
+
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(null, false, "ERROR: Duplicate entry! Duplicate entry "+ vendor.getVendorId()+" for key 'vendor.vendorId'"));
 
         // given
-        given(this.vendorService.createVendor(vendor)).willThrow(new DataIntegrityViolationException("Duplicate entry "+ vendor.getVendorId()+" for key 'vendor.vendorId'"));
+        given(this.vendorService.createVendor(any(Vendor.class))).willThrow(new DataIntegrityViolationException("Duplicate entry "+ vendor.getVendorId()+" for key 'vendor.vendorId'"));
 
         // when
-        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.createVendor(vendor);
-
         // then
-        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        Vendor createdVendor = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.post("/api/v1/vendor")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertNull(createdVendor);
-        verify(this.vendorService, times(1)).createVendor(vendor);
+        then(this.vendorService).should(times(1)).createVendor(any(Vendor.class));
 
     }
 
     @Test
-    void createVendorInternalServerErr() {
+    void createVendorInternalServerErr() throws Exception {
 
         Vendor vendor = new Vendor();
-        vendor.setId(2L);
+        vendor.setId(null);
         vendor.setName("New Vendor");
         vendor.setAddress("121 Demo Ave, LA");
-        vendor.setVendorId("EVID0002");
+        vendor.setVendorId("EVID0003");
+
+        String requestJSON = this.objectMapper.writeValueAsString(vendor);
+
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(null, false, "Something went wrong! Additional Error Message"));
 
         // given
-        given(this.vendorService.createVendor(any(Vendor.class))).willThrow(new RuntimeException("Something went wrong!"));
+        given(this.vendorService.createVendor(any(Vendor.class))).willThrow(new RuntimeException("Additional Error Message"));
+
         // when
-        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.createVendor(vendor);
-
         // then
-        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        Vendor createdVendor = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.post("/api/v1/vendor")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertNull(createdVendor);
-        verify(this.vendorService, times(1)).createVendor(vendor);
+        then(this.vendorService).should(times(1)).createVendor(any(Vendor.class));
 
     }
 
 
     @Test
-    void updateVendor() {
+    void updateVendor() throws Exception {
 
-        vendor1.setName("Vendor One Updated");
+        Vendor vendor = new Vendor();
+        vendor.setId(1L);
+        vendor.setName("New Vendor");
+        vendor.setAddress("121 Demo Ave, LA");
+        vendor.setVendorId("EVID0003");
+
+        Vendor updatedVendor = new Vendor();
+        updatedVendor.setId(1L);
+        updatedVendor.setName("New Vendor");
+        updatedVendor.setAddress("121 Demo Ave, LA");
+        updatedVendor.setVendorId("EVID0003");
 
         // given
-        given(this.vendorService.updateVendor(vendor1.getId(), vendor1)).willReturn(vendor1);
+        given(this.vendorService.updateVendor(any(Long.class), any(Vendor.class))).willReturn(updatedVendor);
+
+        String requestJSON = this.objectMapper.writeValueAsString(vendor);
+
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(updatedVendor, true, "Vendor " + updatedVendor.getName() + " has been updated!"));
 
         // when
-        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.updateVendor(vendor1.getId(), vendor1);
-
         // then
-        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        Vendor updatedVendor = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/vendor/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertTrue(isSuccess);
-        assertEquals(vendor1, updatedVendor);
-        assertEquals(vendor1.getName(), updatedVendor.getName());
-        verify(this.vendorService, times(1)).updateVendor(vendor1.getId(), vendor1);
+        then(this.vendorService).should(times(1)).updateVendor(any(Long.class), any(Vendor.class));
 
     }
     @Test
-    void updateVendorDuplicate() {
+    void updateVendorDuplicate() throws Exception {
 
-        vendor1.setName("Vendor One Update");
-        vendor1.setVendorId("EVID0002");
+        Vendor vendor = new Vendor();
+        vendor.setId(null);
+        vendor.setName("New Vendor");
+        vendor.setAddress("121 Demo Ave, LA");
+        vendor.setVendorId("EVID0003");
 
-        // given
-        given(this.vendorService.updateVendor(vendor1.getId(),vendor1)).willThrow(new DataIntegrityViolationException("Duplicate entry "+ vendor1.getVendorId()+" for key 'vendor.vendorId'"));
+        String requestJSON = this.objectMapper.writeValueAsString(vendor);
 
-        // when
-        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.updateVendor(vendor1.getId(),vendor1);
 
-        // then
-        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        Vendor updatedVendor = responsePayload.getPayload();
-
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertNull(updatedVendor);
-        verify(this.vendorService, times(1)).updateVendor(vendor1.getId(), vendor1);
-
-    }
-
-    @Test
-    void updateVendorInternalServerErr() {
-
-        vendor1.setName("Vendor One Updated");
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(null, false, "ERROR: Duplicate entry! Duplicate entry "+ vendor.getVendorId()+" for key 'vendor.vendorId'"));
 
         // given
-        given(this.vendorService.updateVendor(any(Long.class), any(Vendor.class))).willThrow(new RuntimeException("Something went wrong!"));
+        given(this.vendorService.updateVendor(any(Long.class), any(Vendor.class))).willThrow(new DataIntegrityViolationException("Duplicate entry "+ vendor.getVendorId()+" for key 'vendor.vendorId'"));
+
         // when
-        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.updateVendor(vendor1.getId(), vendor1);
-
         // then
-        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        Vendor updatedVendor = responsePayload.getPayload();
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/vendor/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
-        assertFalse(isSuccess);
-        assertNull(updatedVendor);
-        verify(this.vendorService, times(1)).updateVendor(vendor1.getId(), vendor1);
+        then(this.vendorService).should(times(1)).updateVendor(any(Long.class), any(Vendor.class));
 
     }
 
     @Test
-    void deleteVendor() {
-        // given
-        given(this.vendorService.getVendorById(vendor1.getId())).willReturn(vendor1);
+    void updateVendorInternalServerErr() throws Exception {
 
+        Vendor vendor = new Vendor();
+        vendor.setId(null);
+        vendor.setName("New Vendor");
+        vendor.setAddress("121 Demo Ave, LA");
+        vendor.setVendorId("EVID0003");
+
+        String requestJSON = this.objectMapper.writeValueAsString(vendor);
+
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(null, false, "Something went wrong! Additional Error Message"));
+
+        // given
+        given(this.vendorService.updateVendor(any(Long.class), any(Vendor.class))).willThrow(new RuntimeException("Additional Error Message"));
 
         // when
-        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.deleteVendor(vendor1.getId());
-
         // then
-        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        assertTrue(isSuccess);
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/vendor/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestJSON)
+                ).andDo(print())
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
+
+        then(this.vendorService).should(times(1)).updateVendor(any(Long.class), any(Vendor.class));
+
     }
 
     @Test
-    void deleteVendorWithNonExistingId() {
-        // given
-        given(this.vendorService.getVendorById(vendor1.getId())).willReturn(null);
+    void deleteVendor() throws Exception {
 
-
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(null, true, "Vendor has been deleted"));
         // when
-        ResponseEntity<ResponsePayload<Vendor>> responseEntity = this.vendorController.deleteVendor(vendor1.getId());
-
         // then
-        ResponsePayload<Vendor> responsePayload = (ResponsePayload<Vendor>) responseEntity.getBody();
-        assert responsePayload != null;
-        boolean isSuccess = responsePayload.isSuccess();
-        assertFalse(isSuccess);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.delete("/api/v1/vendor/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
+
+        then(this.vendorService).should(times(1)).deleteVendor(any(Long.class));
+    }
+
+    @Test
+    void deleteVendorWithNonExistingId() throws Exception {
+        // given
+        willThrow(new VendorNotFoundException()).given(this.vendorService).deleteVendor(any(Long.class));
+
+        String expectedReturnJSON = this.objectMapper
+                .writeValueAsString(new ResponsePayload<>(new VendorNotFoundException(), false, "Vendor doesn't exist!"));
+        // when
+        // then
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.delete("/api/v1/vendor/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                ).andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(expectedReturnJSON));
+
+        then(this.vendorService).should(times(1)).deleteVendor(any(Long.class));
     }
 }

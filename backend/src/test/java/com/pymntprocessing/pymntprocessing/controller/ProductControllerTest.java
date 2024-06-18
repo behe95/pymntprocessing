@@ -350,7 +350,7 @@ class ProductControllerTest {
         String JSONRequestBody = this.objectMapper.writeValueAsString(newProductDTO);
 
         // given
-        given(this.productService.createProduct(any(ProductDTO.class))).willThrow(new DataIntegrityViolationException("ERROR: Duplicate entry!"));
+        given(this.productService.createProduct(any(ProductDTO.class))).willThrow(new DataIntegrityViolationException(""));
 
         // when
         // then
@@ -659,16 +659,6 @@ class ProductControllerTest {
         existingProductDTO.setCreated(productDTO1.getCreated());
         existingProductDTO.setModified(productDTO1.getModified());
 
-        PaymentTransactionDTO existingPaymentTransactionDTO = new PaymentTransactionDTO();
-        existingPaymentTransactionDTO.setId(1L);
-        existingPaymentTransactionDTO.setProductDTO(paymentTransactionDTO2.getProductDTO());
-        existingPaymentTransactionDTO.setInvoiceDTO(paymentTransactionDTO2.getInvoiceDTO());
-        existingPaymentTransactionDTO.setTransactionAmount(paymentTransactionDTO2.getTransactionAmount());
-        existingPaymentTransactionDTO.setTransactionType(paymentTransactionDTO2.getTransactionType());
-        existingPaymentTransactionDTO.setTransactionDescription(paymentTransactionDTO2.getTransactionDescription());
-        existingPaymentTransactionDTO.setTransactionNumber(paymentTransactionDTO2.getTransactionNumber());
-        existingPaymentTransactionDTO.setVendor(paymentTransactionDTO2.getVendor());
-        existingPaymentTransactionDTO.setVendor(paymentTransactionDTO2.getVendor());
 
         // given
         given(this.productService.getProductById(any(Long.class))).willReturn(existingProductDTO);

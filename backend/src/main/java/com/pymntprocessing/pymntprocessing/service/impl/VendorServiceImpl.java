@@ -1,7 +1,9 @@
-package com.pymntprocessing.pymntprocessing.service;
+package com.pymntprocessing.pymntprocessing.service.impl;
 
+import com.pymntprocessing.pymntprocessing.exception.VendorNotFoundException;
 import com.pymntprocessing.pymntprocessing.model.entity.Vendor;
 import com.pymntprocessing.pymntprocessing.repository.VendorRepository;
+import com.pymntprocessing.pymntprocessing.service.VendorService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -10,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class VendorServiceImpl implements VendorService{
+public class VendorServiceImpl implements VendorService {
 
     private final VendorRepository vendorRepository;
 
@@ -27,8 +29,7 @@ public class VendorServiceImpl implements VendorService{
 
     @Override
     public Vendor getVendorById(Long id) {
-        Optional<Vendor> vendor = this.vendorRepository.findById(id);
-        return vendor.orElse(null);
+        return this.vendorRepository.findById(id).orElseThrow(VendorNotFoundException::new);
     }
 
     @Override
@@ -48,6 +49,12 @@ public class VendorServiceImpl implements VendorService{
     @Override
     @Transactional
     public void deleteVendor(Long id) {
+        Vendor vendor = this.getVendorById(id);
+
+        if (vendor == null) {
+            throw new VendorNotFoundException();
+        }
+
         this.vendorRepository.deleteById(id);
     }
 }

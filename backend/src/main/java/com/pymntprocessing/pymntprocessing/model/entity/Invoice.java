@@ -23,9 +23,7 @@ public class Invoice {
     private InvoiceStatus invoiceStatus;
 
 
-//    @OneToMany(mappedBy = "invoice")
-    @OneToMany
-    @JoinColumn(name = "fkInvoice", referencedColumnName = "invoicePk")
+    @OneToMany(mappedBy = "invoice", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
     private List<PaymentTransaction> paymentTransaction;
 
     private int invoiceNumber;

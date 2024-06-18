@@ -27,24 +27,14 @@ public class VendorController {
     @GetMapping("/{id}")
     public ResponseEntity<ResponsePayload<Vendor>> getVendorById(@PathVariable Long id) {
         Vendor vendor = this.vendorService.getVendorById(id);
-        if (vendor != null) {
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(new ResponsePayload<Vendor>(vendor, true, ""));
-        }
         return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(new ResponsePayload<>(null, false, "Vendor with id " + id + " is not found"));
+                .status(HttpStatus.OK)
+                .body(new ResponsePayload<Vendor>(vendor, true, ""));
     }
 
     @GetMapping
     public ResponseEntity<ResponsePayload<List<Vendor>>> getAllVendors() {
         List<Vendor> vendors = this.vendorService.getAllVendors();
-        if (vendors.isEmpty()) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(new ResponsePayload<List<Vendor>>(vendors, false, "Vendors not found!"));
-        }
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -53,69 +43,25 @@ public class VendorController {
 
     @PostMapping
     public ResponseEntity<ResponsePayload<Vendor>> createVendor(@RequestBody Vendor vendor) {
-        try {
-            Vendor savedVendor = this.vendorService.createVendor(vendor);
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(new ResponsePayload<Vendor>(vendor, true, "Vendor " + vendor.getName() + " created successfully!"));
-        } catch (DataIntegrityViolationException e) {
-            String errorMessage = "ERROR: Duplicate entry!";
-            if (e.getRootCause() != null) {
-                errorMessage = e.getRootCause().getMessage();
-            }
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponsePayload<Vendor>(null, false, errorMessage));
-        } catch (Exception ex) {
-            String errorMessage = "ERROR: Internal Server Error!";
-
-            errorMessage += ex.getMessage();
-
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponsePayload<Vendor>(null, false, errorMessage));
-        }
+        Vendor savedVendor = this.vendorService.createVendor(vendor);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new ResponsePayload<Vendor>(savedVendor, true, "Vendor " + vendor.getName() + " created successfully!"));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ResponsePayload<Vendor>> updateVendor(@PathVariable Long id, @RequestBody Vendor vendor) {
-        try {
-            Vendor updatedVendor = this.vendorService.updateVendor(id, vendor);
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(new ResponsePayload<>(updatedVendor, true, "Vendor " + vendor.getName() + " has been updated!"));
-        } catch (DataIntegrityViolationException e) {
-            String errorMessage = "ERROR: Duplicate entry!";
-            if (e.getRootCause() != null) {
-                errorMessage = e.getRootCause().getMessage();
-            }
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponsePayload<>(null, false, errorMessage));
-        } catch (Exception ex) {
-            String errorMessage = "ERROR: Internal Server Error!";
-
-            errorMessage += ex.getMessage();
-
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponsePayload<>(null, false, errorMessage));
-        }
+        Vendor updatedVendor = this.vendorService.updateVendor(id, vendor);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new ResponsePayload<>(updatedVendor, true, "Vendor " + vendor.getName() + " has been updated!"));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponsePayload<Vendor>> deleteVendor(@PathVariable Long id) {
-        Vendor vendor = this.vendorService.getVendorById(id);
-
-        if (vendor != null) {
-            this.vendorService.deleteVendor(id);
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(new ResponsePayload<>(null, true, "Vendor " + vendor.getName() + " has been deleted"));
-        }
-
+        this.vendorService.deleteVendor(id);
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(new ResponsePayload<>(null, false, "Invalid id provided"));
+                .status(HttpStatus.OK)
+                .body(new ResponsePayload<>(null, true, "Vendor has been deleted"));
     }
 }
