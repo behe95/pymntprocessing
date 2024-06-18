@@ -1,7 +1,6 @@
 package com.pymntprocessing.pymntprocessing.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.jsonpath.JsonPath;
 import com.pymntprocessing.pymntprocessing.exception.GlobalErrorException;
 import com.pymntprocessing.pymntprocessing.exception.ProductAssignedWithInvalidPaymentTransactionException;
 import com.pymntprocessing.pymntprocessing.exception.ProductNotFoundException;
@@ -27,13 +26,11 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.BDDMockito.then;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -41,7 +38,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 @WebMvcTest(ProductController.class)
 @AutoConfigureMockMvc
 class ProductControllerTest {
@@ -98,7 +94,7 @@ class ProductControllerTest {
         productDTO2.setCreated(LocalDateTime.now().minusDays(11));
         productDTO2.setModified(LocalDateTime.now());
 
-        productDTO2.setPaymentTransactionDTO(paymentTransactionDTO2);
+        productDTO2.setPaymentTransactionDTOs(List.of(paymentTransactionDTO2));
     }
 
     @Test
@@ -115,7 +111,7 @@ class ProductControllerTest {
         ).andDo(print())
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.payload.id").value(id))
-                .andExpect(jsonPath("$.payload.paymentTransactionDTO").value(productDTO1.getPaymentTransactionDTO()))
+                .andExpect(jsonPath("$.payload.paymentTransactionDTOs").value(productDTO1.getPaymentTransactionDTOs()))
                 .andExpect(jsonPath("$.payload.productName").value(productDTO1.getProductName()))
                 .andExpect(jsonPath("$.payload.productDescription").value(productDTO1.getProductDescription()))
                 .andExpect(jsonPath("$.message").value(""))
@@ -205,7 +201,7 @@ class ProductControllerTest {
     void createProductWhenPaymentTransactionNotExist() throws Exception {
         ProductDTO newProductDTO = productDTO1;
         newProductDTO.setId(null);
-        newProductDTO.setPaymentTransactionDTO(null);
+        newProductDTO.setPaymentTransactionDTOs(List.of());
         String JSONRequestBody = this.objectMapper.writeValueAsString(newProductDTO);
 
         ProductDTO returnProductDTO = new ProductDTO();
@@ -243,7 +239,7 @@ class ProductControllerTest {
         verify(this.productService, times(1)).createProduct(productDTOArgumentCaptor.capture());
 
         ProductDTO requestBodyProductDTO = productDTOArgumentCaptor.getValue();
-        assertEquals(newProductDTO.getPaymentTransactionDTO(), requestBodyProductDTO.getPaymentTransactionDTO());
+        assertEquals(newProductDTO.getPaymentTransactionDTOs().size(), requestBodyProductDTO.getPaymentTransactionDTOs().size());
         assertEquals(newProductDTO.getProductName(), requestBodyProductDTO.getProductName());
         assertEquals(newProductDTO.getProductDescription(), requestBodyProductDTO.getProductDescription());
         assertEquals(newProductDTO.getId(), requestBodyProductDTO.getId());
@@ -260,7 +256,7 @@ class ProductControllerTest {
         paymentTransactionDTO.setId(1L);
         paymentTransactionDTO.setProductDTO(null);
 
-        newProductDTO.setPaymentTransactionDTO(paymentTransactionDTO);
+        newProductDTO.setPaymentTransactionDTOs(List.of(paymentTransactionDTO));
 
 
 
@@ -307,10 +303,6 @@ class ProductControllerTest {
         assertEquals(newProductDTO.getCreated(), requestBodyProductDTO.getCreated());
         assertEquals(newProductDTO.getModified(), requestBodyProductDTO.getModified());
 
-
-
-        assertEquals(newProductDTO.getPaymentTransactionDTO().getId(), requestBodyProductDTO.getPaymentTransactionDTO().getId());
-        assertEquals(newProductDTO.getPaymentTransactionDTO().getTransactionDescription(), requestBodyProductDTO.getPaymentTransactionDTO().getTransactionDescription());
     }
 
     @Test
@@ -318,12 +310,12 @@ class ProductControllerTest {
         ProductDTO newProductDTO = productDTO1;
         newProductDTO.setId(null);
 
-        productDTO2.setPaymentTransactionDTO(null);
+        productDTO2.setPaymentTransactionDTOs(List.of());
         PaymentTransactionDTO paymentTransactionDTO = paymentTransactionDTO2;
         paymentTransactionDTO.setId(1L);
         paymentTransactionDTO.setProductDTO(productDTO2);
 
-        newProductDTO.setPaymentTransactionDTO(paymentTransactionDTO);
+        newProductDTO.setPaymentTransactionDTOs(List.of(paymentTransactionDTO));
 
         String JSONRequestBody = this.objectMapper.writeValueAsString(newProductDTO);
 
@@ -351,7 +343,7 @@ class ProductControllerTest {
     void createProductWhenPaymentTransactionWihtDuplicateEntryException() throws Exception {
         ProductDTO newProductDTO = productDTO1;
         newProductDTO.setId(null);
-        newProductDTO.setPaymentTransactionDTO(null);
+        newProductDTO.setPaymentTransactionDTOs(List.of());
 
 
 
@@ -381,7 +373,7 @@ class ProductControllerTest {
     void createProductWhenPaymentTransactionWihtInternalServerErrorException() throws Exception {
         ProductDTO newProductDTO = productDTO1;
         newProductDTO.setId(null);
-        newProductDTO.setPaymentTransactionDTO(null);
+        newProductDTO.setPaymentTransactionDTOs(List.of());
 
 
 
@@ -464,9 +456,9 @@ class ProductControllerTest {
     void updateProductWhenPaymentTransactionAssignedAlreadyHasProductTied() throws Exception {
         productDTO1.setId(1L);
         paymentTransactionDTO2.setId(1L);
-        productDTO2.setPaymentTransactionDTO(null);
+        productDTO2.setPaymentTransactionDTOs(List.of());
         paymentTransactionDTO2.setProductDTO(productDTO2);
-        productDTO1.setPaymentTransactionDTO(paymentTransactionDTO2);
+        productDTO1.setPaymentTransactionDTOs(List.of(paymentTransactionDTO2));
 
         String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(new ProductAssignedWithInvalidPaymentTransactionException(), false,
                 "Unable to assign payment transaction to product"));
@@ -502,9 +494,9 @@ class ProductControllerTest {
     void updateProduct() throws Exception {
         productDTO1.setId(1L);
         paymentTransactionDTO2.setId(1L);
-        productDTO2.setPaymentTransactionDTO(null);
+        productDTO2.setPaymentTransactionDTOs(List.of());
         paymentTransactionDTO2.setProductDTO(null);
-        productDTO1.setPaymentTransactionDTO(paymentTransactionDTO2);
+        productDTO1.setPaymentTransactionDTOs(List.of(paymentTransactionDTO2));
 
 
         String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(productDTO1, true,"Product updated!"));
@@ -541,9 +533,9 @@ class ProductControllerTest {
     void updateProductWithDataIntegrityViolationException() throws Exception {
         productDTO1.setId(1L);
         paymentTransactionDTO2.setId(1L);
-        productDTO2.setPaymentTransactionDTO(null);
+        productDTO2.setPaymentTransactionDTOs(List.of());
         paymentTransactionDTO2.setProductDTO(null);
-        productDTO1.setPaymentTransactionDTO(paymentTransactionDTO2);
+        productDTO1.setPaymentTransactionDTOs(List.of(paymentTransactionDTO2));
 
 
         String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(null, false,"ERROR: Duplicate entry!"));
@@ -580,9 +572,9 @@ class ProductControllerTest {
     void updateProductWithInternalServerException() throws Exception {
         productDTO1.setId(1L);
         paymentTransactionDTO2.setId(1L);
-        productDTO2.setPaymentTransactionDTO(null);
+        productDTO2.setPaymentTransactionDTOs(List.of());
         paymentTransactionDTO2.setProductDTO(null);
-        productDTO1.setPaymentTransactionDTO(paymentTransactionDTO2);
+        productDTO1.setPaymentTransactionDTOs(List.of());
 
 
         String expectedReturnJSON = this.objectMapper.writeValueAsString(
@@ -621,9 +613,9 @@ class ProductControllerTest {
 
         productDTO1.setId(1L);
         paymentTransactionDTO2.setId(1L);
-        productDTO2.setPaymentTransactionDTO(null);
+        productDTO2.setPaymentTransactionDTOs(List.of());
         paymentTransactionDTO2.setProductDTO(null);
-        productDTO1.setPaymentTransactionDTO(paymentTransactionDTO2);
+        productDTO1.setPaymentTransactionDTOs(List.of(paymentTransactionDTO2));
 
 
         String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(null, false,"Product doesn't exist!"));
@@ -652,9 +644,9 @@ class ProductControllerTest {
 
         productDTO1.setId(1L);
         paymentTransactionDTO2.setId(1L);
-        productDTO2.setPaymentTransactionDTO(null);
+        productDTO2.setPaymentTransactionDTOs(List.of());
         paymentTransactionDTO2.setProductDTO(null);
-        productDTO1.setPaymentTransactionDTO(paymentTransactionDTO2);
+        productDTO1.setPaymentTransactionDTOs(List.of(paymentTransactionDTO2));
 
 
         String expectedResponseJSON = this.objectMapper.writeValueAsString(new ResponsePayload<>(null, true,"Product " + productDTO1.getProductName() + " has been deleted"));
@@ -663,7 +655,7 @@ class ProductControllerTest {
         existingProductDTO.setId(1L);
         existingProductDTO.setProductName(productDTO1.getProductName());
         existingProductDTO.setProductDescription(productDTO1.getProductDescription());
-        existingProductDTO.setPaymentTransactionDTO(productDTO1.getPaymentTransactionDTO());
+        existingProductDTO.setPaymentTransactionDTOs(productDTO1.getPaymentTransactionDTOs());
         existingProductDTO.setCreated(productDTO1.getCreated());
         existingProductDTO.setModified(productDTO1.getModified());
 
@@ -680,7 +672,6 @@ class ProductControllerTest {
 
         // given
         given(this.productService.getProductById(any(Long.class))).willReturn(existingProductDTO);
-        given(this.paymentTransactionService.getPaymentTransactionById(any(Long.class))).willReturn(existingPaymentTransactionDTO);
 
         // when
         // then
@@ -692,8 +683,6 @@ class ProductControllerTest {
                 .andExpect(content().json(expectedResponseJSON));
 
         verify(this.productService, times(1)).getProductById(any(Long.class));
-        verify(this.paymentTransactionService, times(1)).getPaymentTransactionById(any(Long.class));
-        verify(this.paymentTransactionService, times(1)).updatePaymentTransaction(any(Long.class), any(PaymentTransactionDTO.class));
         verify(this.productService, times(1)).deleteProduct(any(Long.class));
     }
 }

@@ -8,6 +8,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class ProductMapper extends BaseMapper<Product, ProductDTO>{
     private final ModelMapper modelMapper;
@@ -19,18 +21,14 @@ public class ProductMapper extends BaseMapper<Product, ProductDTO>{
 
     @Override
     public Product convertToEntity(ProductDTO dto) {
-        Product product = null;
+        Product product = this.modelMapper.map(dto, Product.class);
 
-        if (dto != null) {
-            product = this.modelMapper.map(dto, Product.class);
-
-            if (dto.getPaymentTransactionDTO() != null) {
-                PaymentTransaction paymentTransaction = this.modelMapper.map(dto.getPaymentTransactionDTO(), PaymentTransaction.class);
-                paymentTransaction.setId(product.getPaymentTransaction().getId());
-                paymentTransaction.setProduct(product);
-                product.setPaymentTransaction(paymentTransaction);
-            }
-        }
+        List<PaymentTransaction> paymentTransactions = dto.getPaymentTransactionDTOs().stream().map(paymentTransactionDTO -> {
+            PaymentTransaction paymentTransaction = this.modelMapper.map(paymentTransactionDTO, PaymentTransaction.class);
+            paymentTransaction.setProduct(product);
+            return paymentTransaction;
+        }).toList();
+        product.setPaymentTransactions(paymentTransactions);
         return product;
     }
 
@@ -40,10 +38,13 @@ public class ProductMapper extends BaseMapper<Product, ProductDTO>{
         if (entity != null) {
 
             productDTO = this.modelMapper.map(entity, ProductDTO.class);
+            List<PaymentTransactionDTO> paymentTransactionDTOS = entity
+                    .getPaymentTransactions()
+                    .stream()
+                    .map(paymentTransaction -> this.modelMapper.map(paymentTransaction, PaymentTransactionDTO.class))
+                    .toList();
+            productDTO.setPaymentTransactionDTOs(paymentTransactionDTOS);
 
-            if (entity.getPaymentTransaction() != null) {
-                productDTO.setPaymentTransactionDTO(this.modelMapper.map(entity.getPaymentTransaction(), PaymentTransactionDTO.class));
-            }
         }
         return productDTO;
     }

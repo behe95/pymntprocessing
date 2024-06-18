@@ -93,19 +93,6 @@ public class ProductController {
                     .body(new ResponsePayload<>(null, false, "Product doesn't exist!"));
         }
 
-
-
-        PaymentTransactionDTO paymentTransactionDTO = existingProductDTO.getPaymentTransactionDTO();
-
-        if (paymentTransactionDTO != null && paymentTransactionDTO.getId() != null) {
-
-            PaymentTransactionDTO existingPaymentTransaction = this.paymentTransactionService.getPaymentTransactionById(paymentTransactionDTO.getId());
-
-            existingPaymentTransaction.setProductDTO(null);
-            this.paymentTransactionService.updatePaymentTransaction(paymentTransactionDTO.getId(), existingPaymentTransaction);
-        }
-
-
         this.productService.deleteProduct(id);
         return ResponseEntity
                 .status(HttpStatus.OK)

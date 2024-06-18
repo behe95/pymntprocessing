@@ -1,11 +1,12 @@
 package com.pymntprocessing.pymntprocessing.model.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class ProductDTO {
     private Long id;
 
-    private PaymentTransactionDTO paymentTransactionDTO;
+    private List<PaymentTransactionDTO> paymentTransactionDTOs;
 
     private String productName;
 
@@ -23,12 +24,12 @@ public class ProductDTO {
         this.id = id;
     }
 
-    public PaymentTransactionDTO getPaymentTransactionDTO() {
-        return paymentTransactionDTO;
+    public List<PaymentTransactionDTO> getPaymentTransactionDTOs() {
+        return paymentTransactionDTOs;
     }
 
-    public void setPaymentTransactionDTO(PaymentTransactionDTO paymentTransactionDTO) {
-        this.paymentTransactionDTO = paymentTransactionDTO;
+    public void setPaymentTransactionDTOs(List<PaymentTransactionDTO> paymentTransactionDTOs) {
+        this.paymentTransactionDTOs = paymentTransactionDTOs;
     }
 
     public String getProductName() {

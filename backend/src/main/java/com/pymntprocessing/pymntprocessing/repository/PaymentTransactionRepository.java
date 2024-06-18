@@ -12,4 +12,6 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
 
     Optional<PaymentTransaction> findById(Long id);
     List<PaymentTransaction> findAllByVendorId(Long id);
+
+    List<PaymentTransaction> findAllByIdIn(List<Long> ids);
 }

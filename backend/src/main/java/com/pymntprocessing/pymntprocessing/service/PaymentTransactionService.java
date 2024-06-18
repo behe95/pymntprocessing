@@ -22,4 +22,6 @@ public interface PaymentTransactionService {
 
     public void deletePaymentTransaction(Long id);
 
+    public List<PaymentTransactionDTO> getAllPaymentTransactionsByIds(List<Long> ids);
+
 }

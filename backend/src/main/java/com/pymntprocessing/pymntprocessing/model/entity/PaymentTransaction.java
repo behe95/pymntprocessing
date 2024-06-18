@@ -10,7 +10,7 @@ public class PaymentTransaction {
     @Column(name = "paymentTransactionPk")
     private Long id;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "fkProduct", referencedColumnName = "productPk")
     private Product product;
 

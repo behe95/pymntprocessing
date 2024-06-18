@@ -87,7 +87,7 @@ public class DatabaseInitializer {
 
         product2 = new Product();
         product2.setId(2L);
-        product2.setPaymentTransaction(null);
+        product2.setPaymentTransactions(List.of());
         product2.setProductName("Product Two");
         product2.setProductDescription("Product Two Description Test Data");
         product2.setCreated(LocalDateTime.now());
@@ -107,7 +107,7 @@ public class DatabaseInitializer {
         paymentTransaction.setTransactionAmount(5500.16);
 
         // Bi-Directional -- persist entity
-        product1.setPaymentTransaction(paymentTransaction);
+        product1.setPaymentTransactions(List.of(paymentTransaction));
 
         /**
          * Invoice

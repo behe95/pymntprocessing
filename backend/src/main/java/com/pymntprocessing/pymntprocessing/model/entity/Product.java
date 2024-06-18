@@ -3,6 +3,7 @@ package com.pymntprocessing.pymntprocessing.model.entity;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "Product")
@@ -12,8 +13,9 @@ public class Product {
     @Column(name = "productPk")
     private Long id;
 
-    @OneToOne(mappedBy = "product", cascade = CascadeType.MERGE)
-    private PaymentTransaction paymentTransaction;
+    @OneToMany(mappedBy = "product", cascade = {CascadeType.PERSIST
+            , CascadeType.MERGE, CascadeType.REMOVE})
+    private List<PaymentTransaction> paymentTransactions;
 
     private String productName;
 
@@ -32,12 +34,12 @@ public class Product {
         this.id = id;
     }
 
-    public PaymentTransaction getPaymentTransaction() {
-        return paymentTransaction;
+    public List<PaymentTransaction> getPaymentTransactions() {
+        return paymentTransactions;
     }
 
-    public void setPaymentTransaction(PaymentTransaction paymentTransaction) {
-        this.paymentTransaction = paymentTransaction;
+    public void setPaymentTransactions(List<PaymentTransaction> paymentTransactions) {
+        this.paymentTransactions = paymentTransactions;
     }
 
     public String getProductName() {

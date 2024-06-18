@@ -136,4 +136,9 @@ public class PaymentTransactionImpl implements PaymentTransactionService{
         }
         this.paymentTransactionRepository.deleteById(id);
     }
+
+    @Override
+    public List<PaymentTransactionDTO> getAllPaymentTransactionsByIds(List<Long> ids) {
+        return this.paymentTransactionMapper.convertToDTOList(paymentTransactionRepository.findAllByIdIn(ids));
+    }
 }

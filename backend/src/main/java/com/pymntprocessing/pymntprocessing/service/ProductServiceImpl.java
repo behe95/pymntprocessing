@@ -46,15 +46,12 @@ public class ProductServiceImpl implements ProductService{
 
     @Override
     public ProductDTO createProduct(ProductDTO productDTO) {
-        PaymentTransactionDTO paymentTransactionDTO = productDTO.getPaymentTransactionDTO();
-        if (paymentTransactionDTO != null && paymentTransactionDTO.getId() != null) {
 
-            PaymentTransactionDTO existingPaymentTransaction = this.paymentTransactionService.getPaymentTransactionById(paymentTransactionDTO.getId());
+        List<PaymentTransactionDTO> paymentTransactionDTOs = productDTO.getPaymentTransactionDTOs();
 
-            if (existingPaymentTransaction.getProductDTO() != null && !Objects.equals(existingPaymentTransaction.getProductDTO().getId(), productDTO.getId())) {
-                throw new ProductAssignedWithInvalidPaymentTransactionException();
-            }
-        }
+        // make sure not to update instead of create
+        paymentTransactionDTOs.forEach(paymentTransactionDTO -> paymentTransactionDTO.setId(null));
+
         return this.productMapper.convertToDTO(this.productRepository.save(this.productMapper.convertToEntity(productDTO)));
     }
 
@@ -63,17 +60,19 @@ public class ProductServiceImpl implements ProductService{
         Optional<Product> existingProduct = this.productRepository.findById(id);
 
 
-        PaymentTransactionDTO paymentTransactionDTO = productDTO.getPaymentTransactionDTO();
-        if (paymentTransactionDTO != null && paymentTransactionDTO.getId() != null) {
 
-            PaymentTransactionDTO existingPaymentTransaction = this.paymentTransactionService.getPaymentTransactionById(paymentTransactionDTO.getId());
+        List<PaymentTransactionDTO> paymentTransactionDTOS = this.paymentTransactionService.getAllPaymentTransactionsByIds(
+                productDTO.getPaymentTransactionDTOs().stream().map(PaymentTransactionDTO::getId).toList()
+        );
 
-            if (existingPaymentTransaction.getProductDTO() != null && !Objects.equals(existingPaymentTransaction.getProductDTO().getId(), productDTO.getId())) {
+        paymentTransactionDTOS.forEach(paymentTransactionDTO -> {
+            if (!Objects.equals(paymentTransactionDTO.getProductDTO().getId(), productDTO.getId())) {
                 throw new ProductAssignedWithInvalidPaymentTransactionException();
             }
-        }
+        });
 
         if (existingProduct.isPresent()) {
+
             return this.productMapper.convertToDTO(this.productRepository.save(this.productMapper.convertToEntity(productDTO)));
         }
         return null;
