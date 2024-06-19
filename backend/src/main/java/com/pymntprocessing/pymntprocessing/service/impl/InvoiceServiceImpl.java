@@ -4,6 +4,7 @@ import com.pymntprocessing.pymntprocessing.constant.db.InvoiceStatusValue;
 import com.pymntprocessing.pymntprocessing.exception.InvalidDataProvidedException;
 import com.pymntprocessing.pymntprocessing.exception.InvoiceNotFoundException;
 import com.pymntprocessing.pymntprocessing.exception.PaymentTransactionNotFoundException;
+import com.pymntprocessing.pymntprocessing.exception.VendorNotFoundException;
 import com.pymntprocessing.pymntprocessing.model.entity.ResponsePayload;
 import com.pymntprocessing.pymntprocessing.model.entity.Vendor;
 import com.pymntprocessing.pymntprocessing.model.mapper.InvoiceMapper;
@@ -72,10 +73,10 @@ public class InvoiceServiceImpl implements InvoiceService {
          * check if it's a valid vendor
          */
 
-        Vendor existingVendor = this.vendorService.getVendorById(invoiceDTO.getVendor().getId());
-
-        if (existingVendor == null) {
-            errorMessage = "Invalid vendor provided!";
+        try {
+            Vendor existingVendor = this.vendorService.getVendorById(invoiceDTO.getVendor().getId());
+        } catch (VendorNotFoundException e) {
+            errorMessage = "Invalid vendor provided! " + e.getMessage();
             throw new InvalidDataProvidedException(errorMessage);
         }
 

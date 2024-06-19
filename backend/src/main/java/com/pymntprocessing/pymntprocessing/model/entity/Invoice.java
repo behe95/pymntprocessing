@@ -74,6 +74,7 @@ public class Invoice {
         return invoiceNumber;
     }
 
+
     public void setInvoiceNumber(int invoiceNumber) {
         this.invoiceNumber = invoiceNumber;
     }
@@ -92,6 +93,11 @@ public class Invoice {
 
     public void setInvoiceAmount(Double invoiceAmount) {
         this.invoiceAmount = invoiceAmount;
+    }
+
+    @PostLoad
+    public void calculateTotalInvoiceAmount() {
+        this.invoiceAmount = this.paymentTransaction.stream().mapToDouble(PaymentTransaction::getTransactionAmount).sum();
     }
 
     public LocalDateTime getInvoiceDate() {
