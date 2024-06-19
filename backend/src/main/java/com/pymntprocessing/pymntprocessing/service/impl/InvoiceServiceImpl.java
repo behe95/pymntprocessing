@@ -108,10 +108,10 @@ public class InvoiceServiceImpl implements InvoiceService {
          * check if it's a valid vendor
          */
 
-        Vendor existingVendor = this.vendorService.getVendorById(invoiceDTO.getVendor().getId());
-
-        if (existingVendor == null) {
-            errorMessage = "Invalid vendor provided!";
+        try {
+            Vendor existingVendor = this.vendorService.getVendorById(invoiceDTO.getVendor().getId());
+        } catch (VendorNotFoundException e) {
+            errorMessage = "Invalid vendor provided! " + e.getMessage();
             throw new InvalidDataProvidedException(errorMessage);
         }
 
