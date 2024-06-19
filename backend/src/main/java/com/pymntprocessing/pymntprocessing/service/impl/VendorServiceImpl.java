@@ -1,5 +1,6 @@
 package com.pymntprocessing.pymntprocessing.service.impl;
 
+import com.pymntprocessing.pymntprocessing.exception.InvalidDataProvidedException;
 import com.pymntprocessing.pymntprocessing.exception.VendorNotFoundException;
 import com.pymntprocessing.pymntprocessing.model.entity.Vendor;
 import com.pymntprocessing.pymntprocessing.repository.VendorRepository;
@@ -43,17 +44,16 @@ public class VendorServiceImpl implements VendorService {
         if (existingVendor.isPresent()) {
             return this.vendorRepository.save(vendor);
         }
-        return null;
+        throw new VendorNotFoundException();
     }
 
     @Override
     @Transactional
     public void deleteVendor(Long id) {
-        Vendor vendor = this.getVendorById(id);
-
-        if (vendor == null) {
-            throw new VendorNotFoundException();
+        if (id == null) {
+            throw new InvalidDataProvidedException("Vendor id not provided!");
         }
+        this.getVendorById(id);
 
         this.vendorRepository.deleteById(id);
     }
