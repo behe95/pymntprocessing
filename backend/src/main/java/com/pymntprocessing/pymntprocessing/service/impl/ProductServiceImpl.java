@@ -3,7 +3,6 @@ package com.pymntprocessing.pymntprocessing.service.impl;
 import com.pymntprocessing.pymntprocessing.exception.ProductAssignedWithInvalidPaymentTransactionException;
 import com.pymntprocessing.pymntprocessing.exception.ProductNotFoundException;
 import com.pymntprocessing.pymntprocessing.model.dto.PaymentTransactionDTO;
-import com.pymntprocessing.pymntprocessing.model.entity.ResponsePayload;
 import com.pymntprocessing.pymntprocessing.model.mapper.ProductMapper;
 import com.pymntprocessing.pymntprocessing.model.dto.ProductDTO;
 import com.pymntprocessing.pymntprocessing.model.entity.Product;
@@ -11,8 +10,6 @@ import com.pymntprocessing.pymntprocessing.repository.ProductRepository;
 import com.pymntprocessing.pymntprocessing.service.PaymentTransactionService;
 import com.pymntprocessing.pymntprocessing.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -61,6 +58,9 @@ public class ProductServiceImpl implements ProductService {
     public ProductDTO updateProduct(Long id, ProductDTO productDTO) {
         Optional<Product> existingProduct = this.productRepository.findById(id);
 
+        if (existingProduct.isEmpty()) {
+            throw new ProductNotFoundException();
+        }
 
 
         List<PaymentTransactionDTO> paymentTransactionDTOS = this.paymentTransactionService.getAllPaymentTransactionsByIds(
@@ -68,16 +68,13 @@ public class ProductServiceImpl implements ProductService {
         );
 
         paymentTransactionDTOS.forEach(paymentTransactionDTO -> {
-            if (!Objects.equals(paymentTransactionDTO.getProductDTO().getId(), productDTO.getId())) {
+            if (Objects.nonNull(paymentTransactionDTO.getProductDTO()) &&
+                    !Objects.equals(paymentTransactionDTO.getProductDTO().getId(), productDTO.getId())) {
                 throw new ProductAssignedWithInvalidPaymentTransactionException();
             }
         });
 
-        if (existingProduct.isPresent()) {
-
-            return this.productMapper.convertToDTO(this.productRepository.save(this.productMapper.convertToEntity(productDTO)));
-        }
-        return null;
+        return this.productMapper.convertToDTO(this.productRepository.save(this.productMapper.convertToEntity(productDTO)));
     }
 
     @Override
