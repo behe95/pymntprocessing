@@ -2,7 +2,9 @@ package com.pymntprocessing.pymntprocessing.service.impl;
 
 import com.pymntprocessing.pymntprocessing.constant.db.TransactionTypeValue;
 import com.pymntprocessing.pymntprocessing.exception.InvalidDataProvidedException;
+import com.pymntprocessing.pymntprocessing.exception.InvoiceNotFoundException;
 import com.pymntprocessing.pymntprocessing.exception.PaymentTransactionNotFoundException;
+import com.pymntprocessing.pymntprocessing.exception.VendorNotFoundException;
 import com.pymntprocessing.pymntprocessing.model.entity.Vendor;
 import com.pymntprocessing.pymntprocessing.model.mapper.PaymentTransactionMapper;
 import com.pymntprocessing.pymntprocessing.model.dto.PaymentTransactionDTO;
@@ -21,7 +23,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Service
-public class PaymentTransactionImpl implements PaymentTransactionService {
+public class PaymentTransactionServiceImpl implements PaymentTransactionService {
 
     private final PaymentTransactionRepository paymentTransactionRepository;
     private final TransactionTypeRepository transactionTypeRepository;
@@ -32,7 +34,7 @@ public class PaymentTransactionImpl implements PaymentTransactionService {
     private final PaymentTransactionMapper paymentTransactionMapper;
 
     @Autowired
-    public PaymentTransactionImpl(PaymentTransactionRepository paymentTransactionRepository, TransactionTypeRepository transactionTypeRepository, VendorService vendorService, ModelMapper modelMapper, PaymentTransactionMapper paymentTransactionMapper) {
+    public PaymentTransactionServiceImpl(PaymentTransactionRepository paymentTransactionRepository, TransactionTypeRepository transactionTypeRepository, VendorService vendorService, ModelMapper modelMapper, PaymentTransactionMapper paymentTransactionMapper) {
         this.paymentTransactionRepository = paymentTransactionRepository;
         this.transactionTypeRepository = transactionTypeRepository;
         this.vendorService = vendorService;
@@ -89,8 +91,7 @@ public class PaymentTransactionImpl implements PaymentTransactionService {
 
     @Override
     public TransactionType getTransactionTypeById(Long id) {
-        Optional<TransactionType> transactionType = this.transactionTypeRepository.findById(id);
-        return transactionType.orElse(null);
+        return this.transactionTypeRepository.findById(id).orElse(null);
     }
 
     @Override
@@ -102,9 +103,11 @@ public class PaymentTransactionImpl implements PaymentTransactionService {
          * check if it's a valid vendor
          */
 
-        Vendor existingVendor = this.vendorService.getVendorById(paymentTransactionDTO.getVendor().getId());
 
-        if (existingVendor == null) {
+
+        try {
+            Vendor existingVendor = this.vendorService.getVendorById(paymentTransactionDTO.getVendor().getId());
+        } catch (VendorNotFoundException ex) {
             errorMessage = "Invalid vendor provided!";
             throw new InvalidDataProvidedException(errorMessage);
         }
@@ -125,16 +128,19 @@ public class PaymentTransactionImpl implements PaymentTransactionService {
         Optional<PaymentTransaction> existingPaymentTransaction = this.paymentTransactionRepository.findById(id);
         if (existingPaymentTransaction.isPresent()) {
             return this.paymentTransactionMapper.convertToDTO(this.paymentTransactionRepository.save(this.paymentTransactionMapper.convertToEntity(paymentTransactionDTO)));
+        } else {
+            throw new InvoiceNotFoundException();
         }
-        return null;
     }
 
     @Override
     public void deletePaymentTransaction(Long id) {
-        PaymentTransactionDTO paymentTransactionDTO = this.getPaymentTransactionById(id);
 
-        if (paymentTransactionDTO == null) {
-            throw new InvalidDataProvidedException("Invalid id provided");
+        try {
+            PaymentTransactionDTO paymentTransactionDTO = this.getPaymentTransactionById(id);
+        }
+        catch (PaymentTransactionNotFoundException ex) {
+            throw new InvalidDataProvidedException("Invalid id provided!");
         }
         this.paymentTransactionRepository.deleteById(id);
     }
