@@ -58,6 +58,9 @@ public class GlobalErrorExceptionHandler {
             case "vendor.vendorid":
                 errorMessage += "Vendor ID already exists!";
                 break;
+            case "paymenttransaction.transactionnumber":
+                errorMessage += "Transaction number already exists!";
+                break;
             default:
                 break;
         }

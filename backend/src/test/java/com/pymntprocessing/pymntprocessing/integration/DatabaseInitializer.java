@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.List;
 
 @Component
@@ -40,8 +41,12 @@ public class DatabaseInitializer {
     public static PaymentTransaction paymentTransaction;
     public static Invoice invoice;
 
+    public static LocalDateTime datetime = LocalDateTime.of(2024, Month.JANUARY, 15, 10, 30, 30, 653132);
+
+
     @Transactional
     public void init() {
+        this.preConfig();
 
         /**
          * Transaction Type
@@ -82,7 +87,7 @@ public class DatabaseInitializer {
         product1.setId(1L);
         product1.setProductName("Product One");
         product1.setProductDescription("Product One Description");
-        product1.setCreated(LocalDateTime.now());
+        product1.setCreated(datetime);
         product1.setModified(null);
 
         product2 = new Product();
@@ -90,7 +95,7 @@ public class DatabaseInitializer {
         product2.setPaymentTransactions(List.of());
         product2.setProductName("Product Two");
         product2.setProductDescription("Product Two Description Test Data");
-        product2.setCreated(LocalDateTime.now());
+        product2.setCreated(datetime);
         product2.setModified(null);
 
         /**
@@ -120,10 +125,10 @@ public class DatabaseInitializer {
         invoice.setInvoiceNumber(1);
         invoice.setInvoiceDescription("Invoice One");
         invoice.setInvoiceAmount(null);
-        invoice.setInvoiceDate(LocalDateTime.now().minusDays(2));
-        invoice.setInvoiceDueDate(LocalDateTime.now().plusDays(2));
+        invoice.setInvoiceDate(datetime.minusDays(2));
+        invoice.setInvoiceDueDate(datetime.plusDays(2));
         invoice.setInvoiceReceivedDate(null);
-        invoice.setCreated(LocalDateTime.now());
+        invoice.setCreated(datetime);
         invoice.setModified(null);
 
 

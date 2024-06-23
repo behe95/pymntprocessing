@@ -12,6 +12,7 @@ import com.pymntprocessing.pymntprocessing.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -48,8 +49,15 @@ public class ProductServiceImpl implements ProductService {
 
         List<PaymentTransactionDTO> paymentTransactionDTOs = productDTO.getPaymentTransactionDTOs();
 
+        if (Objects.isNull(paymentTransactionDTOs)) {
+            paymentTransactionDTOs = new ArrayList<>();
+            productDTO.setPaymentTransactionDTOs(paymentTransactionDTOs);
+        }
+
         // make sure not to update instead of create
-        paymentTransactionDTOs.forEach(paymentTransactionDTO -> paymentTransactionDTO.setId(null));
+        productDTO.getPaymentTransactionDTOs().forEach(paymentTransactionDTO -> paymentTransactionDTO.setId(null));
+
+
 
         return this.productMapper.convertToDTO(this.productRepository.save(this.productMapper.convertToEntity(productDTO)));
     }
