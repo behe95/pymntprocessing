@@ -2,6 +2,7 @@ package com.pymntprocessing.pymntprocessing.exception;
 
 import com.pymntprocessing.pymntprocessing.constant.ErrorCodes;
 import com.pymntprocessing.pymntprocessing.model.entity.ResponsePayload;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,19 +29,39 @@ public class GlobalErrorExceptionHandler {
     public ResponseEntity<ResponsePayload<DataIntegrityViolationException>> handleDataIntegrityViolationException(DataIntegrityViolationException exception) {
         String errorMessage = "ERROR: Duplicate entry! ";
 
-        if (exception.getMessage() != null) {
-            errorMessage += exception.getMessage();
-        }
-
         if (exception.getCause() != null) {
-            errorMessage += exception.getCause().getMessage();
+            ConstraintViolationException cause = (ConstraintViolationException) exception.getCause();
+            if (cause.getConstraintName() != null) {
+                errorMessage += this.extractErrorMessageForDataIntegrityViolationException(cause.getConstraintName());
+            }
         }
 
-        if (exception.getRootCause() != null) {
-            errorMessage += exception.getRootCause().getMessage();
-        }
+//        if (exception.getMessage() != null) {
+//            errorMessage += exception.getMessage();
+//        }
+//
+//        if (exception.getCause() != null) {
+//            errorMessage += exception.getCause().getMessage();
+//        }
+//
+//        if (exception.getRootCause() != null) {
+//            errorMessage += exception.getRootCause().getMessage();
+//        }
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ResponsePayload<>(null, false, errorMessage.trim()));
+    }
+
+    private String extractErrorMessageForDataIntegrityViolationException(String field) {
+        String errorMessage = "";
+        switch (field.toLowerCase()) {
+            case "vendor.vendorid":
+                errorMessage += "Vendor ID already exists!";
+                break;
+            default:
+                break;
+        }
+
+        return errorMessage;
     }
 }

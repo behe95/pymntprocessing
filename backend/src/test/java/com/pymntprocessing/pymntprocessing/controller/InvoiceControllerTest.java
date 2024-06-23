@@ -388,10 +388,10 @@ class InvoiceControllerTest {
 
         String requestJSON = this.objectMapper.writeValueAsString(newInvoice);
         String expectedReturnJSON = this.objectMapper
-                .writeValueAsString(new ResponsePayload<>(null, false, "ERROR: Duplicate entry! Duplicate entry "+ newInvoice.getInvoiceNumber()+" for key 'vendor.vendorId'"));
+                .writeValueAsString(new ResponsePayload<>(null, false, "ERROR: Duplicate entry!"));
 
         // given
-        given(this.invoiceService.createInvoice(any(InvoiceDTO.class))).willThrow(new DataIntegrityViolationException("Duplicate entry "+ newInvoice.getInvoiceNumber()+" for key 'vendor.vendorId'"));
+        given(this.invoiceService.createInvoice(any(InvoiceDTO.class))).willThrow(new DataIntegrityViolationException(""));
 
 
         // when
@@ -648,10 +648,10 @@ class InvoiceControllerTest {
 
         String requestJSON = this.objectMapper.writeValueAsString(updatedInvoice);
         String expectedReturnJSON = this.objectMapper
-                .writeValueAsString(new ResponsePayload<>(null, false, "ERROR: Duplicate entry! Duplicate entry "+ updatedInvoice.getInvoiceNumber()+" for key 'vendor.vendorId'"));
+                .writeValueAsString(new ResponsePayload<>(null, false, "ERROR: Duplicate entry!"));
 
         // given
-        given(this.invoiceService.updateInvoice(any(Long.class), any(InvoiceDTO.class))).willThrow(new DataIntegrityViolationException("Duplicate entry "+ updatedInvoice.getInvoiceNumber()+" for key 'vendor.vendorId'"));
+        given(this.invoiceService.updateInvoice(any(Long.class), any(InvoiceDTO.class))).willThrow(new DataIntegrityViolationException(""));
 
 
         // when

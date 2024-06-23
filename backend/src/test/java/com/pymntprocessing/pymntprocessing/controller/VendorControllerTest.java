@@ -192,10 +192,10 @@ class VendorControllerTest {
 
 
         String expectedReturnJSON = this.objectMapper
-                .writeValueAsString(new ResponsePayload<>(null, false, "ERROR: Duplicate entry! Duplicate entry "+ vendor.getVendorId()+" for key 'vendor.vendorId'"));
+                .writeValueAsString(new ResponsePayload<>(null, false, "ERROR: Duplicate entry!"));
 
         // given
-        given(this.vendorService.createVendor(any(Vendor.class))).willThrow(new DataIntegrityViolationException("Duplicate entry "+ vendor.getVendorId()+" for key 'vendor.vendorId'"));
+        given(this.vendorService.createVendor(any(Vendor.class))).willThrow(new DataIntegrityViolationException(""));
 
         // when
         // then
@@ -297,10 +297,10 @@ class VendorControllerTest {
 
 
         String expectedReturnJSON = this.objectMapper
-                .writeValueAsString(new ResponsePayload<>(null, false, "ERROR: Duplicate entry! Duplicate entry "+ vendor.getVendorId()+" for key 'vendor.vendorId'"));
+                .writeValueAsString(new ResponsePayload<>(null, false, "ERROR: Duplicate entry!"));
 
         // given
-        given(this.vendorService.updateVendor(any(Long.class), any(Vendor.class))).willThrow(new DataIntegrityViolationException("Duplicate entry "+ vendor.getVendorId()+" for key 'vendor.vendorId'"));
+        given(this.vendorService.updateVendor(any(Long.class), any(Vendor.class))).willThrow(new DataIntegrityViolationException(""));
 
         // when
         // then

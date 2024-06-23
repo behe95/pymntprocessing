@@ -30,15 +30,15 @@ public class DatabaseInitializer {
     @Autowired
     private TransactionTypeRepository transactionTypeRepository;
 
-    private TransactionType transactionType;
-    private InvoiceStatus invoiceStatus;
-    private Vendor vendor1;
-    private Vendor vendor2;
-    private Product product1;
-    private Product product2;
+    public static TransactionType transactionType;
+    public static InvoiceStatus invoiceStatus;
+    public static Vendor vendor1;
+    public static Vendor vendor2;
+    public static Product product1;
+    public static Product product2;
 
-    private PaymentTransaction paymentTransaction;
-    private Invoice invoice;
+    public static PaymentTransaction paymentTransaction;
+    public static Invoice invoice;
 
     @Transactional
     public void init() {
