@@ -71,6 +71,11 @@ public class ProductServiceImpl implements ProductService {
         }
 
 
+        if (Objects.isNull(productDTO.getPaymentTransactionDTOs())) {
+            productDTO.setPaymentTransactionDTOs(new ArrayList<>());
+        }
+
+
         List<PaymentTransactionDTO> paymentTransactionDTOS = this.paymentTransactionService.getAllPaymentTransactionsByIds(
                 productDTO.getPaymentTransactionDTOs().stream().map(PaymentTransactionDTO::getId).toList()
         );

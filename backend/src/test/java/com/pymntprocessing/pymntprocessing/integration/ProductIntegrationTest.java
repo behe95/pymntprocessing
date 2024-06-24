@@ -6,7 +6,6 @@ import com.pymntprocessing.pymntprocessing.model.dto.ProductDTO;
 import com.pymntprocessing.pymntprocessing.model.entity.PaymentTransaction;
 import com.pymntprocessing.pymntprocessing.model.entity.Product;
 import com.pymntprocessing.pymntprocessing.model.entity.ResponsePayload;
-import com.pymntprocessing.pymntprocessing.model.entity.Vendor;
 import com.pymntprocessing.pymntprocessing.model.mapper.PaymentTransactionMapper;
 import com.pymntprocessing.pymntprocessing.model.mapper.ProductMapper;
 import com.pymntprocessing.pymntprocessing.util.DatabaseDateTimeConverter;
@@ -236,18 +235,17 @@ public class ProductIntegrationTest {
     }
 
 
-    /**
-     * TODO     Fix update to untie product from all the transactions
-     *          when empty list provided
-     */
     @Test
-    void updateProduct() throws Exception {
+    void updateProductWhenEmptyPaymentTransactionProvided() throws Exception {
         ProductDTO newProductDTO = new ProductDTO();
         newProductDTO.setId(1L);
         newProductDTO.setProductName("Product One");
         newProductDTO.setProductDescription("Product One Description Updated");
         newProductDTO.setCreated(this.databaseDateTimeConverter.convertTo_yyyyMMdd_HHmmss(DatabaseInitializer.datetime));
         newProductDTO.setModified(this.databaseDateTimeConverter.convertTo_yyyyMMdd_HHmmss(DatabaseInitializer.datetime));
+
+        PaymentTransactionDTO paymentTransactionDTO = new PaymentTransactionDTO();
+
         newProductDTO.setPaymentTransactionDTOs(List.of());
 
         ProductDTO updatedProductDTO = new ProductDTO();
@@ -291,5 +289,201 @@ public class ProductIntegrationTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().json(JSONResponseAfterUpdate));
 
+    }
+
+
+    @Test
+    void updateProductWhenNewPaymentTransactionProvided() throws Exception {
+        ProductDTO newProductDTO = new ProductDTO();
+        newProductDTO.setId(1L);
+        newProductDTO.setProductName("Product One");
+        newProductDTO.setProductDescription("Product One Description Updated");
+        newProductDTO.setCreated(this.databaseDateTimeConverter.convertTo_yyyyMMdd_HHmmss(DatabaseInitializer.datetime));
+        newProductDTO.setModified(this.databaseDateTimeConverter.convertTo_yyyyMMdd_HHmmss(DatabaseInitializer.datetime));
+
+        PaymentTransactionDTO paymentTransactionDTO = new PaymentTransactionDTO();
+        PaymentTransactionDTO createdPaymentTransactionDTO = new PaymentTransactionDTO();
+        this.modelMapper.map(paymentTransactionDTO, createdPaymentTransactionDTO);
+        createdPaymentTransactionDTO.setId(2L);
+
+
+        newProductDTO.setPaymentTransactionDTOs(List.of(paymentTransactionDTO));
+
+        ProductDTO updatedProductDTO = new ProductDTO();
+        this.modelMapper.map(newProductDTO, updatedProductDTO);
+        updatedProductDTO.setPaymentTransactionDTOs(List.of(createdPaymentTransactionDTO));
+
+        String JSONRequest = this.objectMapper.writeValueAsString(newProductDTO);
+
+        ResponsePayload<ProductDTO> responsePayloadOnUpdate = new ResponsePayload<>(
+                updatedProductDTO
+                ,true
+                ,"Product updated!"
+        );
+        String JSONResponseOnUpdate = this.objectMapper.writeValueAsString(responsePayloadOnUpdate);
+
+        /**
+         * Update product
+         */
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/product/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(JSONRequest)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(JSONResponseOnUpdate));
+
+        /**
+         * Query from Database
+         */
+
+        ResponsePayload<ProductDTO> responsePayloadAfterUpdate = new ResponsePayload<>(
+                updatedProductDTO
+                ,true
+                ,""
+        );
+        String JSONResponseAfterUpdate = this.objectMapper.writeValueAsString(responsePayloadAfterUpdate);
+
+        this.mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/product/1"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(JSONResponseAfterUpdate));
+
+    }
+
+
+
+
+    @Test
+    void updateProductWhenNewAndExistingPaymentTransactionProvided() throws Exception {
+        ProductDTO newProductDTO = new ProductDTO();
+        newProductDTO.setId(1L);
+        newProductDTO.setProductName("Product One");
+        newProductDTO.setProductDescription("Product One Description Updated");
+        newProductDTO.setCreated(this.databaseDateTimeConverter.convertTo_yyyyMMdd_HHmmss(DatabaseInitializer.datetime));
+        newProductDTO.setModified(this.databaseDateTimeConverter.convertTo_yyyyMMdd_HHmmss(DatabaseInitializer.datetime));
+
+        PaymentTransactionDTO paymentTransactionDTO = new PaymentTransactionDTO();
+        PaymentTransactionDTO createdPaymentTransactionDTO = new PaymentTransactionDTO();
+        this.modelMapper.map(paymentTransactionDTO, createdPaymentTransactionDTO);
+        createdPaymentTransactionDTO.setId(2L);
+
+        PaymentTransactionDTO existingPaymentTransactionDTO = new PaymentTransactionDTO();
+        this.modelMapper.map(DatabaseInitializer.paymentTransaction, existingPaymentTransactionDTO);
+        existingPaymentTransactionDTO.setTransactionDescription("Updated!!");
+
+
+        newProductDTO.setPaymentTransactionDTOs(List.of(existingPaymentTransactionDTO, paymentTransactionDTO));
+
+        ProductDTO updatedProductDTO = new ProductDTO();
+        this.modelMapper.map(newProductDTO, updatedProductDTO);
+        updatedProductDTO.setPaymentTransactionDTOs(List.of(existingPaymentTransactionDTO, createdPaymentTransactionDTO));
+
+        String JSONRequest = this.objectMapper.writeValueAsString(newProductDTO);
+
+        ResponsePayload<ProductDTO> responsePayloadOnUpdate = new ResponsePayload<>(
+                updatedProductDTO
+                ,true
+                ,"Product updated!"
+        );
+        String JSONResponseOnUpdate = this.objectMapper.writeValueAsString(responsePayloadOnUpdate);
+
+        /**
+         * Update product
+         */
+        this.mockMvc.perform(
+                        MockMvcRequestBuilders.put("/api/v1/product/1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(JSONRequest)
+                ).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(JSONResponseOnUpdate));
+
+        /**
+         * Query from Database
+         */
+
+        ResponsePayload<ProductDTO> responsePayloadAfterUpdate = new ResponsePayload<>(
+                updatedProductDTO
+                ,true
+                ,""
+        );
+        String JSONResponseAfterUpdate = this.objectMapper.writeValueAsString(responsePayloadAfterUpdate);
+
+        this.mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/product/1"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(JSONResponseAfterUpdate));
+
+    }
+
+
+    @Test
+    void deleteProduct() throws Exception {
+
+        ProductMapper productMapper = new ProductMapper(new ModelMapper());
+        ProductDTO productDTO1 = productMapper.convertToDTO(DatabaseInitializer.product1);
+        ProductDTO productDTO2 = productMapper.convertToDTO(DatabaseInitializer.product2);
+
+
+        productDTO1.setCreated(this.databaseDateTimeConverter.convertTo_yyyyMMdd_HHmmss(DatabaseInitializer.product1.getCreated()));
+        productDTO1.setModified(this.databaseDateTimeConverter.convertTo_yyyyMMdd_HHmmss(DatabaseInitializer.product1.getModified()));
+
+        productDTO2.setCreated(this.databaseDateTimeConverter.convertTo_yyyyMMdd_HHmmss(DatabaseInitializer.product2.getCreated()));
+        productDTO2.setModified(this.databaseDateTimeConverter.convertTo_yyyyMMdd_HHmmss(DatabaseInitializer.product2.getModified()));
+
+        /**
+         * Before Delete
+         */
+        ResponsePayload<List<ProductDTO>> responsePayloadBeforeDelete = new ResponsePayload<>(
+                List.of(productDTO1, productDTO2)
+                ,true
+                ,""
+        );
+        String JSONResponseBeforeDelete = this.objectMapper.writeValueAsString(responsePayloadBeforeDelete);
+
+        this.mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/product"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(JSONResponseBeforeDelete));
+
+
+        /**
+         * On Delete
+         */
+        ResponsePayload<List<ProductDTO>> responsePayloadOnDelete = new ResponsePayload<>(
+                null
+                ,true
+                ,"Product "+ productDTO1.getProductName() +" has been deleted"
+        );
+        String JSONResponseOnDelete = this.objectMapper.writeValueAsString(responsePayloadOnDelete);
+
+        this.mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/product/1"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(JSONResponseOnDelete));
+
+
+        /**
+         * After Delete
+         */
+        ResponsePayload<List<ProductDTO>> responsePayloadAfterDelete = new ResponsePayload<>(
+                List.of(productDTO2)
+                ,true
+                ,""
+        );
+        String JSONResponseAfterDelete = this.objectMapper.writeValueAsString(responsePayloadAfterDelete);
+
+        this.mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/product"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(JSONResponseAfterDelete));
     }
 }
